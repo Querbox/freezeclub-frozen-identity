@@ -617,6 +617,7 @@ function fpBurst(el, text){
 function showTab(name){
   sfx("click");
   $$(".tab").forEach(t => t.classList.toggle("is-active", t.dataset.tab === name));
+  $$(".bnav").forEach(b => b.classList.toggle("is-active", b.dataset.tab === name));
   $$(".view").forEach(v => v.classList.toggle("is-active", v.id === "view-"+name));
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -645,7 +646,7 @@ function bindEvents(){
     sfx("click");
   }));
 
-  $$(".tab").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
+  $$(".tab, .bnav").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
   $$("[data-go]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.go)));
 
   document.addEventListener("click", (e) => {

@@ -2,7 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
 <title>Freezeclub — Frozen Identity</title>
 <meta name="theme-color" content="#f6f8fa" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -76,7 +79,7 @@
           <button class="tab is-active" data-tab="home">Übersicht</button>
           <button class="tab" data-tab="checkin">Check-in</button>
           <button class="tab" data-tab="shop">Shop</button>
-          <button class="tab" data-tab="challenges">Challenges</button>
+          <button class="tab" data-tab="challenges">Missions</button>
           <button class="tab" data-tab="leaderboard">Ranking</button>
           <button class="tab" data-tab="editor">Avatar</button>
         </div>
@@ -233,6 +236,30 @@
         </div>
       </section>
     </main>
+
+    <!-- Mobile bottom tab bar -->
+    <nav class="bottom-nav hidden" id="bottomNav" aria-label="Navigation">
+      <button class="bnav is-active" data-tab="home">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="bnav" data-tab="checkin">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 7h16v12H4zM4 7l8 6 8-6M4 7V5h16v2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+        <span>Check-in</span>
+      </button>
+      <button class="bnav bnav--center" data-tab="editor">
+        <span class="bnav__orb">◆</span>
+        <span>Avatar</span>
+      </button>
+      <button class="bnav" data-tab="shop">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 8h14l-1 12H6L5 8zM8 8V5a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+        <span>Shop</span>
+      </button>
+      <button class="bnav" data-tab="challenges">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5L12 15.5 7 18.2l1-5.5-4-3.9 5.5-.8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+        <span>Missions</span>
+      </button>
+    </nav>
 
     <!-- Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
