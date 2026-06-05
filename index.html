@@ -78,6 +78,7 @@
           <button class="tab" data-tab="shop">Shop</button>
           <button class="tab" data-tab="challenges">Challenges</button>
           <button class="tab" data-tab="leaderboard">Ranking</button>
+          <button class="tab" data-tab="editor">Avatar</button>
         </div>
         <div class="topbar__user">
           <span class="hud-pill">
@@ -120,6 +121,7 @@
                 <span><span id="seasonPoints">0</span> / <span id="seasonGoal">500</span> FP zur nächsten Stufe</span>
                 <span class="muted" id="rankLabel">Rookie</span>
               </div>
+              <button class="btn--buy" data-go="editor" style="margin-top:14px;width:100%">Avatar anpassen</button>
             </div>
           </article>
 
@@ -202,6 +204,22 @@
         <div class="challenges" id="challengesList"></div>
       </section>
 
+      <!-- AVATAR EDITOR -->
+      <section class="view" id="view-editor">
+        <header class="view__header">
+          <div>
+            <p class="eyebrow">Customization</p>
+            <h2 class="h1">Cryo-Self anpassen</h2>
+          </div>
+        </header>
+        <div class="editor">
+          <div class="editor__stage">
+            <div class="avatar-stage"><div class="avatar-stage__avatar" id="editorAvatar"></div></div>
+          </div>
+          <div class="editor__controls" id="editorControls"></div>
+        </div>
+      </section>
+
       <!-- LEADERBOARD -->
       <section class="view" id="view-leaderboard">
         <header class="view__header">
@@ -233,6 +251,7 @@
     <!-- Confetti container -->
     <div class="confetti" id="confetti"></div>
   </div>
+<script src="avatar.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -81,6 +81,7 @@ const defaultState = () => ({
   equipped: { aura: null, gear: null, env: null },
   challengeProgress: {}, unlockedAchievements: [],
   soundOn: true,
+  avatar: window.defaultAvatar ? window.defaultAvatar() : null,
   createdAt: new Date().toISOString(),
 });
 
@@ -135,8 +136,14 @@ function tone(freq, dur, vol, type, t){
   osc.start(t); osc.stop(t + dur + .05);
 }
 
-/* ---------- Avatar SVG ---------- */
+/* ---------- Avatar SVG (v2 wrapper) ---------- */
 function renderAvatar(target, opts = {}){
+  if(window.renderAvatarV2 && state.avatar){
+    return window.renderAvatarV2(target, opts.avatar || state.avatar, opts.equipped || state.equipped);
+  }
+  return _renderAvatarLegacy(target, opts);
+}
+function _renderAvatarLegacy(target, opts = {}){
   const style = opts.style || state.style || "arctic";
   const aura = opts.aura || state.equipped.aura;
   const gear = opts.gear || state.equipped.gear;
@@ -363,6 +370,66 @@ function renderAll(animate=false){
 
   // sound button state
   $("#soundBtn")?.classList.toggle("is-muted", !state.soundOn);
+
+  renderEditor();
+}
+
+/* ---------- Avatar Editor ---------- */
+function renderEditor(){
+  const wrap = $("#editorControls");
+  if(!wrap || !state.avatar) return;
+  const a = state.avatar;
+  const rows = window.PART_ORDER.map(key => {
+    const opts = window.AVATAR_PARTS[key];
+    const cur = a[key];
+    const idx = opts.indexOf(cur);
+    const isColor = key.toLowerCase().includes("color") || key === "skinTone";
+    const valueDisplay = isColor
+      ? `<span class="swatch" style="background:${esc(cur)}"></span>`
+      : `<span>${esc(String(cur))}</span>`;
+    return `<div class="part-row">
+      <span class="part-row__label">${esc(window.PART_LABELS[key])}</span>
+      <div class="part-row__value">${valueDisplay}<div class="dim small" style="margin-top:2px">${idx+1} / ${opts.length}</div></div>
+      <div class="part-row__nav">
+        <button class="nav-btn" data-part="${esc(key)}" data-dir="-1">◀</button>
+        <button class="nav-btn" data-part="${esc(key)}" data-dir="1">▶</button>
+      </div>
+    </div>`;
+  }).join("");
+  wrap.innerHTML = rows + `
+    <div class="editor__actions">
+      <button class="btn--randomize" id="randomizeBtn">Zufällig</button>
+      <button class="btn--save" id="saveAvatarBtn">Speichern</button>
+    </div>
+  `;
+  const equipped = state.equipped;
+  window.renderAvatarV2($("#editorAvatar"), a, equipped);
+}
+
+function cycleAvatarPart(key, dir){
+  const opts = window.AVATAR_PARTS[key];
+  if(!opts) return;
+  const cur = state.avatar[key];
+  let idx = opts.indexOf(cur);
+  idx = (idx + dir + opts.length) % opts.length;
+  state.avatar[key] = opts[idx];
+  save();
+  sfx("click");
+  renderEditor();
+  renderAvatar($("#avatarStage"));
+}
+
+function randomizeAvatar(){
+  const a = {};
+  for(const k of window.PART_ORDER){
+    const opts = window.AVATAR_PARTS[k];
+    a[k] = opts[Math.floor(Math.random()*opts.length)];
+  }
+  state.avatar = a;
+  save();
+  sfx("buy");
+  renderEditor();
+  renderAvatar($("#avatarStage"));
 }
 
 let currentFilter = "all";
@@ -562,6 +629,7 @@ function bindEvents(){
     state.goal = $("#goal").value;
     state.style = $$('input[name="style"]').find(r=>r.checked).value;
     state.onboarded = true;
+    if(!state.avatar) state.avatar = window.defaultAvatar();
     state.points = 200; state.totalPoints = 200; state.seasonPoints = 200;
     save();
     ensureAudio();
@@ -574,7 +642,6 @@ function bindEvents(){
   });
 
   $$('input[name="style"]').forEach(r => r.addEventListener("change", () => {
-    renderAvatar($("#onboardingAvatar"), { style: $$('input[name="style"]').find(r=>r.checked).value });
     sfx("click");
   }));
 
@@ -582,6 +649,10 @@ function bindEvents(){
   $$("[data-go]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.go)));
 
   document.addEventListener("click", (e) => {
+    const part = e.target.closest("[data-part]");
+    if(part){ cycleAvatarPart(part.dataset.part, parseInt(part.dataset.dir,10)); return; }
+    if(e.target.id === "randomizeBtn"){ randomizeAvatar(); return; }
+    if(e.target.id === "saveAvatarBtn"){ sfx("levelup"); toast("Avatar gespeichert"); return; }
     const svc = e.target.closest("[data-service]");
     if(svc){ bookService(svc.dataset.service, svc); return; }
     const buy = e.target.closest("[data-buy]");
@@ -627,7 +698,8 @@ function enterApp(){
 
 function boot(){
   bindEvents();
-  renderAvatar($("#onboardingAvatar"), { style: state.style });
+  if(!state.avatar) state.avatar = window.defaultAvatar();
+  window.renderAvatarV2($("#onboardingAvatar"), state.avatar, state.equipped);
   if(state.onboarded) enterApp();
 }
 
