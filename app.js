@@ -5,19 +5,19 @@ const STORAGE_KEY = "freezeclub.v2";
 const SEASON = { id: "S01", name: "Winter Cryo", daysLeft: 47 };
 
 const SERVICES = [
-  { id: "cryo",  name: "Kältekammer",   meta: "3 Min · -85°C",  points: 100, icon: "❄" },
-  { id: "lymph", name: "Lymphdrainage", meta: "30 Min",         points: 75,  icon: "≋" },
-  { id: "scan",  name: "4D-Bodyscan",   meta: "10 Min",         points: 150, icon: "◉" },
-  { id: "combo", name: "Kombi-Session", meta: "2+ Anwendungen", points: 230, icon: "✦" },
+  { id: "cryo",  name: "Kältekammer",   meta: "3 Min · −85 °C",       sub: "Kälte-Schub", points: 100, icon: "❄", from: "#dceaf6", to: "#bfdaef", color: "#1854a8" },
+  { id: "lymph", name: "Lymphdrainage", meta: "30 Min Regeneration",  sub: "Regen-Boost", points: 75,  icon: "≋", from: "#dcf0ea", to: "#bfe4d4", color: "#2a8a6e" },
+  { id: "scan",  name: "4D-Bodyscan",   meta: "10 Min Tracking",      sub: "Wachstum",    points: 150, icon: "◉", from: "#ebe0f4", to: "#d8c4ea", color: "#7c4fb8" },
+  { id: "combo", name: "Kombi-Session", meta: "2+ Anwendungen",       sub: "Booster",     points: 230, icon: "✦", from: "#fdeed1", to: "#f8d99a", color: "#a8631a" },
 ];
 
 const RANKS = [
-  { name: "Rookie",   min: 0 },
-  { name: "Explorer", min: 500 },
-  { name: "Adept",    min: 1200 },
-  { name: "Elite",    min: 2500 },
-  { name: "Master",   min: 5000 },
-  { name: "Legend",   min: 10000 },
+  { name: "Frostknospe",      min: 0 },
+  { name: "Eiskeim",          min: 200 },
+  { name: "Kristallwächter",  min: 500 },
+  { name: "Eismeister",       min: 1200 },
+  { name: "Polarchampion",    min: 2500 },
+  { name: "Cryo-Legende",     min: 5000 },
 ];
 
 const LEVEL_STEP = 500;
@@ -282,9 +282,11 @@ function animateNumber(el, to, dur=800){
 
 /* ---------- Rank ---------- */
 function rankFor(total){
-  let r = RANKS[0];
-  for(const x of RANKS) if(total >= x.min) r = x;
-  return r;
+  let r = RANKS[0], next = RANKS[1] || RANKS[0];
+  for(let i=0;i<RANKS.length;i++){
+    if(total >= RANKS[i].min){ r = RANKS[i]; next = RANKS[i+1] || r; }
+  }
+  return { current: r, next, toNext: Math.max(0, next.min - total) };
 }
 
 /* ---------- Rendering ---------- */
@@ -312,7 +314,11 @@ function renderAll(animate=false){
   $("#seasonPoints").textContent = into;
   $("#seasonGoal").textContent = LEVEL_STEP;
   setTimeout(() => $("#levelFill").style.width = (into/LEVEL_STEP*100) + "%", 100);
-  $("#rankLabel").textContent = rankFor(state.totalPoints).name;
+  const rank = rankFor(state.totalPoints);
+  $("#rankLabel").textContent = rank.current.name;
+  const ptsToNext = $("#ptsToNext"); if(ptsToNext) ptsToNext.textContent = rank.toNext;
+  const nextRank = $("#nextRank"); if(nextRank) nextRank.textContent = rank.next.name;
+  const avatarName = $("#avatarName"); if(avatarName) avatarName.textContent = state.firstName ? state.firstName : "Frosti";
 
   renderAvatar($("#avatarStage"));
   renderAvatarMeta();
@@ -323,11 +329,42 @@ function renderAll(animate=false){
     <div class="service">
       <div class="service__info">
         <span class="service__name">${esc(s.icon)} ${esc(s.name)}</span>
-        <span class="service__meta">${esc(s.meta)} · <span class="service__pts">+${s.points} FP</span></span>
+        <span class="service__meta">${esc(s.meta)} · <span class="service__pts">+${s.points} Eis-Punkte</span></span>
       </div>
-      <button class="btn--buy" data-service="${esc(s.id)}">Check-in</button>
+      <button class="btn--buy" data-service="${esc(s.id)}">Buchen</button>
     </div>
   `).join("");
+
+  // Boosters (home card)
+  const boosters = $("#boostersList");
+  if(boosters){
+    boosters.innerHTML = SERVICES.filter(s => s.id !== "combo").map(s => `
+      <button class="booster" data-service="${esc(s.id)}" style="--bi-from:${s.from};--bi-to:${s.to};--bi-color:${s.color}">
+        <span class="booster__icon">${esc(s.icon)}</span>
+        <span class="booster__name">${esc(s.name)}</span>
+        <span class="booster__sub">${esc(s.sub)}</span>
+        <span class="booster__pts">+${s.points} Punkte</span>
+      </button>
+    `).join("");
+  }
+
+  // Week tracker
+  const wt = $("#weekTrack");
+  if(wt){
+    const days = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+    const today = new Date();
+    const dow = (today.getDay() + 6) % 7; // 0 = Mo
+    wt.innerHTML = days.map((d,i) => {
+      const done = i < state.streak && i <= dow;
+      const isToday = i === dow;
+      return `<div class="day ${done?'is-done':''} ${isToday?'is-today':''}">
+        <span class="day__label">${d}</span>
+        <span class="day__dot">
+          <svg class="day__icon" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>`;
+    }).join("");
+  }
 
   renderShop();
 
@@ -349,7 +386,7 @@ function renderAll(animate=false){
           <span class="eyebrow">${done?'Completed':'Active'}</span>
           <h3 class="challenge__title">${esc(c.title)}</h3>
         </div>
-        <span class="challenge__reward">+${c.reward} FP</span>
+        <span class="challenge__reward">+${c.reward} Punkte</span>
       </div>
       <p class="muted" style="margin:0;font-size:13px">${esc(c.desc)}</p>
       <div class="challenge__progress">
@@ -365,7 +402,7 @@ function renderAll(animate=false){
     <li class="${u.me?'is-me':''}">
       <span class="rank">${String(i+1).padStart(2,'0')}</span>
       <span class="lb-name">${esc(u.name)}</span>
-      <span class="lb-points">${u.pts.toLocaleString("de-DE")} FP</span>
+      <span class="lb-points">${u.pts.toLocaleString("de-DE")} Pkt</span>
     </li>
   `).join("");
 
@@ -537,7 +574,7 @@ function bumpChallenge(c, by){
     state.totalPoints += c.reward;
     setTimeout(() => {
       sfx("achievement");
-      toast(`MISSION COMPLETE: ${c.title} · +${c.reward} FP`, 3500);
+      toast(`MISSION COMPLETE: ${c.title} · +${c.reward} Punkte`, 3500);
     }, 900);
   }
 }
@@ -669,7 +706,7 @@ function bindEvents(){
     enterApp();
     setTimeout(() => {
       confetti();
-      showModal({ eyebrow: "WELCOME", title: "+200 FrostPoints", desc: "Dein Cryo-Self ist aktiv. Starte deinen ersten Check-in.", art: "◆" });
+      showModal({ eyebrow: "WILLKOMMEN", title: "+200 Eis-Punkte", desc: "Frosti ist erwacht. Starte deinen ersten Check-in.", art: "❄" });
     }, 400);
   });
 
@@ -740,8 +777,8 @@ function enterApp(){
 
 function boot(){
   bindEvents();
-  // Migrate old avatar schema to v4 (chibi)
-  if(!state.avatar || !state.avatar.outfit){
+  // Migrate older avatar schemas to v5 (Frosti)
+  if(!state.avatar || !state.avatar.bodyColor || !state.avatar.hat){
     state.avatar = window.defaultAvatar();
     save();
   }
