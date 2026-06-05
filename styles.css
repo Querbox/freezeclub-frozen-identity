@@ -505,22 +505,114 @@ body::after{
   border: 1px solid rgba(237,228,211,.18);
 }
 
-/* Avatar stage — premium portrait */
+/* Avatar stage — game scene with cryo landscape */
 .avatar-stage{
-  aspect-ratio: 4/5; position: relative;
+  aspect-ratio: 1/1; position: relative;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 35%, rgba(110,197,213,.10) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 50% 85%, rgba(237,228,211,.04) 0%, transparent 60%),
-    linear-gradient(180deg, #131e2e 0%, #0a1018 100%);
+    /* Aurora glow */
+    radial-gradient(ellipse 80% 40% at 30% 20%, rgba(110,197,213,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 80% 25%, rgba(184,160,216,.12) 0%, transparent 65%),
+    /* Ground glow */
+    radial-gradient(ellipse 70% 40% at 50% 85%, rgba(110,197,213,.15) 0%, transparent 70%),
+    /* Sky */
+    linear-gradient(180deg, #1a2638 0%, #0e1726 50%, #131e2e 100%);
   display:flex; align-items:flex-end; justify-content:center;
   overflow:hidden; margin: 8px 0 14px;
   border-bottom: 1px solid var(--line);
 }
+
+/* Distant mountains/iceberg silhouettes */
+.avatar-stage::before{
+  content:""; position:absolute; bottom: 0; left:0; right:0; height: 35%;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(110,197,213,.08) 60%, rgba(184,216,230,.18) 100%);
+  clip-path: polygon(0% 100%, 0% 60%, 12% 40%, 22% 55%, 30% 30%, 40% 50%, 50% 25%, 58% 45%, 68% 35%, 78% 50%, 86% 30%, 100% 55%, 100% 100%);
+  z-index: 1;
+}
+
+/* Snowflakes drifting in stage */
+.avatar-stage::after{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index: 1;
+  background-image:
+    radial-gradient(2px 2px at 12% 18%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 28% 35%, #fff, transparent),
+    radial-gradient(2px 2px at 58% 12%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 78% 28%, #fff, transparent),
+    radial-gradient(2px 2px at 88% 60%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 18% 70%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 92% 8%, #fff, transparent);
+  background-size: 400px 400px;
+  animation: snowfall 18s linear infinite;
+  opacity: .6;
+}
+@keyframes snowfall{
+  from{ background-position: 0 -100px }
+  to  { background-position: 0 400px }
+}
+
 .avatar-stage__avatar{
-  position:relative; z-index:2;
-  width: 86%; height: 92%;
-  animation: float 5s ease-in-out infinite;
+  position:relative; z-index: 3;
+  width: 90%; max-height: 92%;
+  animation: bounce 2.4s cubic-bezier(.5,0,.5,1) infinite;
   display:flex; align-items:flex-end; justify-content:center;
+}
+
+@keyframes bounce{
+  0%,100%{ transform: translateY(0) scaleY(1) }
+  20%   { transform: translateY(-12px) scaleY(1.03) }
+  40%   { transform: translateY(0) scaleY(.97) }
+  60%   { transform: translateY(-4px) scaleY(1.01) }
+}
+
+/* Breath puff overlay */
+.avatar-stage__breath{
+  position: absolute; top: 38%; right: 18%;
+  width: 24px; height: 24px;
+  background: radial-gradient(circle, rgba(255,255,255,.5), transparent 70%);
+  border-radius: 50%;
+  opacity: 0; z-index: 4;
+  animation: breath 5s ease-in-out infinite;
+}
+@keyframes breath{
+  0%, 60%   { opacity: 0; transform: translate(0,0) scale(.5) }
+  70%       { opacity: .7; transform: translate(8px, -4px) scale(1) }
+  100%      { opacity: 0; transform: translate(24px, -16px) scale(1.6) }
+}
+
+/* Hearts/streak indicator above avatar */
+.avatar-hearts{
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px; z-index: 5;
+}
+.heart{
+  width: 22px; height: 22px;
+  background: linear-gradient(135deg, #ff7a89, #ff5470);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21s-7-4.5-9.5-9C.7 8.6 2.3 4.5 6 4.5c2 0 3.5 1 4.5 2.5C11.5 5.5 13 4.5 15 4.5c3.7 0 5.3 4.1 3.5 7.5C19 16.5 12 21 12 21z'/></svg>") center/contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21s-7-4.5-9.5-9C.7 8.6 2.3 4.5 6 4.5c2 0 3.5 1 4.5 2.5C11.5 5.5 13 4.5 15 4.5c3.7 0 5.3 4.1 3.5 7.5C19 16.5 12 21 12 21z'/></svg>") center/contain no-repeat;
+  animation: heart-beat 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(255,84,112,.5));
+}
+.heart:nth-child(2){ animation-delay: .2s }
+.heart:nth-child(3){ animation-delay: .4s }
+.heart:nth-child(4){ animation-delay: .6s }
+.heart.is-empty{
+  background: rgba(255,255,255,.15);
+  filter: none;
+}
+@keyframes heart-beat{
+  0%,100%{ transform: scale(1) }
+  20%    { transform: scale(1.15) }
+  40%    { transform: scale(1) }
+}
+
+/* Username tag above hearts */
+.avatar-name{
+  position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
+  font-family: var(--serif); font-weight: 500; font-size: 18px;
+  color: #fff; letter-spacing: -.02em;
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+  z-index: 5; pointer-events: none;
+  white-space: nowrap;
 }
 @keyframes float{
   0%,100%{ transform: translateY(0) }

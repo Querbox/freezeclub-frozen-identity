@@ -315,6 +315,7 @@ function renderAll(animate=false){
   $("#rankLabel").textContent = rankFor(state.totalPoints).name;
 
   renderAvatar($("#avatarStage"));
+  renderAvatarMeta();
   $("#userId").textContent = state.userId;
   renderQR($("#qrCode"), state.userId);
 
@@ -374,6 +375,21 @@ function renderAll(animate=false){
   renderEditor();
 }
 
+/* ---------- Avatar meta (hearts + name tag) ---------- */
+function renderAvatarMeta(){
+  const hearts = $("#avatarHearts");
+  const nameTag = $("#avatarNameTag");
+  if(hearts){
+    const filled = Math.min(4, Math.max(1, Math.ceil(state.streak / 2) || 1));
+    let h = "";
+    for(let i=0;i<4;i++) h += `<div class="heart${i<filled?'':' is-empty'}"></div>`;
+    hearts.innerHTML = h;
+  }
+  if(nameTag){
+    nameTag.textContent = state.firstName || "Cryo-Self";
+  }
+}
+
 /* ---------- Avatar Editor ---------- */
 function renderEditor(){
   const wrap = $("#editorControls");
@@ -411,6 +427,7 @@ function cycleAvatarPart(key, dir){
   if(!opts) return;
   const cur = state.avatar[key];
   let idx = opts.indexOf(cur);
+  if(idx < 0) idx = 0;
   idx = (idx + dir + opts.length) % opts.length;
   state.avatar[key] = opts[idx];
   save();
@@ -699,7 +716,11 @@ function enterApp(){
 
 function boot(){
   bindEvents();
-  if(!state.avatar) state.avatar = window.defaultAvatar();
+  // Migrate old avatar schema to v4 (chibi)
+  if(!state.avatar || !state.avatar.outfit){
+    state.avatar = window.defaultAvatar();
+    save();
+  }
   window.renderAvatarV2($("#onboardingAvatar"), state.avatar, state.equipped);
   if(state.onboarded) enterApp();
 }
