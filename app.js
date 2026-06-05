@@ -810,9 +810,30 @@ function showTab(name){
 
 /* ---------- Events ---------- */
 function bindEvents(){
-  $("#onboardingForm").addEventListener("submit", e => {
-    e.preventDefault();
-    state.firstName = $("#firstName").value.trim() || "Frosti";
+  // ===== Onboarding slide navigation =====
+  let currentSlide = 0;
+  const totalSlides = 4;
+
+  function goToSlide(idx){
+    idx = Math.max(0, Math.min(totalSlides - 1, idx));
+    currentSlide = idx;
+    $$(".slide").forEach(s => s.classList.toggle("is-active", parseInt(s.dataset.step, 10) === idx));
+    $$(".onboarding__dots .dot").forEach((d, i) => d.classList.toggle("is-active", i === idx));
+    const back = $("#onboardingBack"); if(back) back.disabled = idx === 0;
+    const next = $("#onboardingNext"); if(next){
+      next.textContent = idx === totalSlides - 1 ? "Frosti aufwecken" : "Weiter";
+    }
+    sfx("click");
+  }
+
+  function completeOnboarding(){
+    const firstName = ($("#firstName").value || "").trim();
+    if(!firstName){
+      goToSlide(totalSlides - 1);
+      setTimeout(() => $("#firstName").focus(), 100);
+      return;
+    }
+    state.firstName = firstName;
     state.goal = $("#goal").value;
     state.onboarded = true;
     state.avatar = window.defaultAvatar();
@@ -823,8 +844,25 @@ function bindEvents(){
     enterApp();
     setTimeout(() => {
       confetti();
-      showModal({ eyebrow: "WILLKOMMEN", title: "+200 Eis-Punkte", desc: "Frosti ist erwacht. Starte deinen ersten Check-in.", art: "❄" });
+      showModal({ eyebrow: "Willkommen", title: "+200 Eis-Punkte", desc: "Frosti ist erwacht. Starte deinen ersten Check-in.", art: "❄" });
     }, 400);
+  }
+
+  $("#onboardingNext")?.addEventListener("click", () => {
+    if(currentSlide === totalSlides - 1){
+      const form = $("#onboardingForm");
+      if(form.checkValidity()) completeOnboarding();
+      else form.reportValidity();
+    } else {
+      goToSlide(currentSlide + 1);
+    }
+  });
+  $("#onboardingBack")?.addEventListener("click", () => goToSlide(currentSlide - 1));
+  $("#onboardingSkip")?.addEventListener("click", () => goToSlide(totalSlides - 1));
+
+  $("#onboardingForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    completeOnboarding();
   });
 
 
