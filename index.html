@@ -80,7 +80,14 @@
           <button class="tab" data-tab="leaderboard">Ranking</button>
         </div>
         <div class="topbar__user">
-          <span class="points-pill"><span class="dot"></span><span id="topPoints">0</span> FP</span>
+          <span class="hud-pill">
+            <span class="hud-pill__icon">◆</span>
+            <span><span class="hud-pill__label">FrostPoints</span><br/><span class="hud-pill__num" id="topPoints">0</span></span>
+          </span>
+          <button class="icon-btn sound-btn" id="soundBtn" title="Sound" aria-label="Sound umschalten">
+            <svg class="sound-on" viewBox="0 0 24 24" width="16" height="16"><path d="M3 10v4h4l5 4V6L7 10H3zm12 2a3 3 0 0 0-2-2.8v5.6A3 3 0 0 0 15 12z" fill="currentColor"/></svg>
+            <svg class="sound-off" viewBox="0 0 24 24" width="16" height="16"><path d="M3 10v4h4l5 4V6L7 10H3zM16 8l5 5m0-5-5 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </button>
           <button class="icon-btn" id="resetBtn" title="Zurücksetzen" aria-label="Zurücksetzen">
             <svg viewBox="0 0 24 24" width="16" height="16"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
@@ -106,7 +113,7 @@
               <span class="eyebrow">Dein Cryo-Self</span>
               <span class="level-badge">Lvl <span id="levelNum">1</span></span>
             </div>
-            <div class="avatar-stage" id="avatarStage"></div>
+            <div class="avatar-stage"><div class="avatar-stage__avatar" id="avatarStage"></div></div>
             <div class="progress">
               <div class="progress__bar"><div class="progress__fill" id="levelFill"></div></div>
               <div class="progress__meta">
@@ -173,7 +180,7 @@
             <p class="eyebrow">Item Lab</p>
             <h2 class="h1">Avatar-Shop</h2>
           </div>
-          <span class="points-pill points-pill--lg"><span class="dot"></span><span id="shopPoints">0</span> FP verfügbar</span>
+          <span class="hud-pill"><span class="hud-pill__icon">◆</span><span><span class="hud-pill__label">verfügbar</span><br/><span class="hud-pill__num"><span id="shopPoints">0</span> FP</span></span></span>
         </header>
         <div class="filters" id="shopFilters">
           <button class="chip is-active" data-filter="all">Alle</button>
@@ -211,6 +218,20 @@
 
     <!-- Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+      <div class="modal__inner">
+        <div class="modal__art" id="modalArt">◆</div>
+        <p class="modal__eyebrow" id="modalEyebrow">Level Up</p>
+        <h2 class="modal__title" id="modalTitle">Stufe 2</h2>
+        <p class="modal__desc" id="modalDesc">Du hast eine neue Stufe erreicht.</p>
+        <button class="modal__close" id="modalClose">Weiter</button>
+      </div>
+    </div>
+
+    <!-- Confetti container -->
+    <div class="confetti" id="confetti"></div>
   </div>
 <script src="app.js"></script>
 </body>
