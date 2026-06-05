@@ -550,16 +550,16 @@ body::before{
 
 .avatar-stage__avatar{
   position:relative; z-index: 3;
-  width: 90%; max-height: 92%;
-  animation: bounce 2.4s cubic-bezier(.5,0,.5,1) infinite;
+  width: 78%; max-height: 80%;
+  animation: bounce 3.2s cubic-bezier(.5,0,.5,1) infinite;
   display:flex; align-items:flex-end; justify-content:center;
 }
 
 @keyframes bounce{
-  0%,100%{ transform: translateY(0) scaleY(1) }
-  20%   { transform: translateY(-12px) scaleY(1.03) }
-  40%   { transform: translateY(0) scaleY(.97) }
-  60%   { transform: translateY(-4px) scaleY(1.01) }
+  0%,100%{ transform: translateY(0) scale(1) }
+  25%   { transform: translateY(-6px) scale(1.015, .985) }
+  50%   { transform: translateY(0) scale(.99, 1.015) }
+  75%   { transform: translateY(-3px) scale(1.005, .995) }
 }
 
 /* Breath puff overlay */
@@ -1123,7 +1123,13 @@ body::before{
   position: sticky; top: 100px; align-self: start;
   box-shadow: var(--shadow-card);
 }
-.editor__stage .avatar-stage{ margin: 0; border-radius: 18px; border: 0 }
+.editor__stage .avatar-stage{
+  margin: 0; border-radius: 18px; border: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, #ffffff 0%, transparent 65%),
+    linear-gradient(180deg, #f4faff 0%, #e0eef9 100%);
+}
+.editor__stage .avatar-stage::before, .editor__stage .avatar-stage::after{ display: none }
 
 .editor__controls{
   display:flex; flex-direction: column; gap: 12px;

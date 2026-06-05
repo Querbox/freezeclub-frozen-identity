@@ -428,6 +428,18 @@ function renderAvatarMeta(){
 }
 
 /* ---------- Avatar Editor ---------- */
+const COLOR_PREVIEWS = {
+  blue:     "#cfe3ef",
+  mint:     "#c8e4dd",
+  lavender: "#dccfe2",
+  peach:    "#f5cdbf",
+};
+const LABEL_MAP = {
+  bodyColor: { blue: "Eisblau", mint: "Polarminze", lavender: "Aurora", peach: "Sonnenfrost" },
+  hair: { spiky: "Zacken", swoosh: "Welle", peaks: "Gipfel", flame: "Flamme" },
+  expression: { smile: "Lächeln", happy: "Fröhlich", sparkle: "Funkelnd", wink: "Zwinkern", sleepy: "Verträumt" },
+};
+
 function renderEditor(){
   const wrap = $("#editorControls");
   if(!wrap || !state.avatar) return;
@@ -436,10 +448,10 @@ function renderEditor(){
     const opts = window.AVATAR_PARTS[key];
     const cur = a[key];
     const idx = opts.indexOf(cur);
-    const isColor = key.toLowerCase().includes("color") || key === "skinTone";
-    const valueDisplay = isColor
-      ? `<span class="swatch" style="background:${esc(cur)}"></span>`
-      : `<span>${esc(String(cur))}</span>`;
+    const display = (LABEL_MAP[key] && LABEL_MAP[key][cur]) || cur;
+    const valueDisplay = key === "bodyColor"
+      ? `<span class="swatch" style="background:${esc(COLOR_PREVIEWS[cur] || '#cfe3ef')}"></span><span>${esc(display)}</span>`
+      : `<span>${esc(display)}</span>`;
     return `<div class="part-row">
       <span class="part-row__label">${esc(window.PART_LABELS[key])}</span>
       <div class="part-row__value">${valueDisplay}<div class="dim small" style="margin-top:2px">${idx+1} / ${opts.length}</div></div>
@@ -455,8 +467,7 @@ function renderEditor(){
       <button class="btn--save" id="saveAvatarBtn">Speichern</button>
     </div>
   `;
-  const equipped = state.equipped;
-  window.renderAvatarV2($("#editorAvatar"), a, equipped);
+  window.renderAvatarV2($("#editorAvatar"), a);
 }
 
 function cycleAvatarPart(key, dir){
@@ -694,11 +705,10 @@ function showTab(name){
 function bindEvents(){
   $("#onboardingForm").addEventListener("submit", e => {
     e.preventDefault();
-    state.firstName = $("#firstName").value.trim() || "Member";
+    state.firstName = $("#firstName").value.trim() || "Frosti";
     state.goal = $("#goal").value;
-    state.style = $$('input[name="style"]').find(r=>r.checked).value;
     state.onboarded = true;
-    if(!state.avatar) state.avatar = window.defaultAvatar();
+    state.avatar = window.defaultAvatar();
     state.points = 200; state.totalPoints = 200; state.seasonPoints = 200;
     save();
     ensureAudio();
@@ -710,9 +720,6 @@ function bindEvents(){
     }, 400);
   });
 
-  $$('input[name="style"]').forEach(r => r.addEventListener("change", () => {
-    sfx("click");
-  }));
 
   $$(".tab, .bnav").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
   $$("[data-go]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.go)));
@@ -777,12 +784,13 @@ function enterApp(){
 
 function boot(){
   bindEvents();
-  // Migrate older avatar schemas to v5 (Frosti)
-  if(!state.avatar || !state.avatar.bodyColor || !state.avatar.hat){
+  // Migrate older avatar schemas to v6 (fixed Frosti)
+  if(!state.avatar || !state.avatar.bodyColor || !state.avatar.hair || !state.avatar.expression
+     || !["blue","mint","lavender","peach"].includes(state.avatar.bodyColor)){
     state.avatar = window.defaultAvatar();
     save();
   }
-  window.renderAvatarV2($("#onboardingAvatar"), state.avatar, state.equipped);
+  window.renderAvatarV2($("#onboardingAvatar"), state.avatar);
   if(state.onboarded) enterApp();
 }
 

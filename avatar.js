@@ -1,218 +1,200 @@
-/* Freezeclub Avatar v5 — Frosti (Snowball mascot) */
+/* Freezeclub Avatar v6 — Frosti (Fixed design, soft pastel kawaii)
+   Based on reference images. Less fault-prone, stable composition.
+   Customization: color, hair, expression only. */
 
 const AVATAR_PARTS = {
-  bodyColor: ["#e8f3fa", "#d8eaf6", "#c4e0ef", "#a8d0e4", "#e8e8e8"],
-  eyes: ["dots", "happy", "sparkle", "sleepy"],
-  cheeks: ["frost", "pink", "none"],
-  hat: ["none", "beanie", "santa", "headband", "icicles"],
-  glasses: ["none", "round", "visor", "shades"],
-  cape: ["none", "aurora", "frost", "gold"],
+  bodyColor: ["blue", "mint", "lavender", "peach"],
+  hair: ["spiky", "swoosh", "peaks", "flame"],
+  expression: ["smile", "happy", "sparkle", "wink", "sleepy"],
 };
 
 const PART_LABELS = {
-  bodyColor: "Körperfarbe",
-  eyes: "Augen",
-  cheeks: "Wangen",
-  hat: "Mütze",
-  glasses: "Brille",
-  cape: "Umhang",
+  bodyColor: "Farbe",
+  hair: "Frisur",
+  expression: "Ausdruck",
 };
 
-const PART_ORDER = ["bodyColor","eyes","cheeks","hat","glasses","cape"];
+const PART_ORDER = ["bodyColor","hair","expression"];
+
+/* Color palette per body color */
+const PALETTES = {
+  blue:     { top: "#f4faff", mid: "#e0eef9", bottom: "#c8dff0", outline: "#9cc2dd", cheek: "#cfe3ef" },
+  mint:     { top: "#f0faf6", mid: "#d4eee5", bottom: "#b8e0d0", outline: "#8dc7b3", cheek: "#c8e4dd" },
+  lavender: { top: "#f5f3fa", mid: "#e5e0ef", bottom: "#cdc4dc", outline: "#a99cc4", cheek: "#dccfe2" },
+  peach:    { top: "#fdf0e8", mid: "#fae0d0", bottom: "#dde8f2", outline: "#c5a8b0", cheek: "#f5cdbf" },
+};
 
 function defaultAvatar(){
   return {
-    bodyColor: AVATAR_PARTS.bodyColor[1],
-    eyes: "dots",
-    cheeks: "frost",
-    hat: "icicles",
-    glasses: "none",
-    cape: "none",
+    bodyColor: "blue",
+    hair: "spiky",
+    expression: "sparkle",
   };
-}
-
-function _shade(hex, amt){
-  const c = hex.replace("#","");
-  const num = parseInt(c, 16);
-  let r = (num >> 16) + amt, g = ((num >> 8) & 0xff) + amt, b = (num & 0xff) + amt;
-  r = Math.max(0, Math.min(255, r)); g = Math.max(0, Math.min(255, g)); b = Math.max(0, Math.min(255, b));
-  return "#" + ((r<<16)|(g<<8)|b).toString(16).padStart(6,"0");
 }
 
 let _uid = 0;
 const nextId = () => "av" + (++_uid);
 
-/* ---------- Body & feet ---------- */
-function bodyAndFeet(color){
-  const dark = _shade(color, -25);
-  const darker = _shade(color, -45);
-  return `
-    <!-- feet -->
-    <ellipse cx="80" cy="178" rx="12" ry="6" fill="${darker}"/>
-    <ellipse cx="120" cy="178" rx="12" ry="6" fill="${darker}"/>
-    <!-- main body -->
-    <ellipse cx="100" cy="108" rx="68" ry="66" fill="${color}" stroke="${dark}" stroke-width="2"/>
-    <!-- top highlight -->
-    <ellipse cx="78" cy="68" rx="22" ry="14" fill="#ffffff" opacity=".55"/>
-    <ellipse cx="75" cy="62" rx="10" ry="6" fill="#ffffff" opacity=".8"/>
-  `;
-}
-
-/* ---------- Eyes ---------- */
-function eyes(type){
-  // Centered around (100, 108)
-  const lx = 84, rx = 116, cy = 108;
-  if(type === "happy"){
-    return `<path d="M${lx-8},${cy+2} Q${lx},${cy-5} ${lx+8},${cy+2}" fill="none" stroke="#1a2438" stroke-width="3.5" stroke-linecap="round"/>
-            <path d="M${rx-8},${cy+2} Q${rx},${cy-5} ${rx+8},${cy+2}" fill="none" stroke="#1a2438" stroke-width="3.5" stroke-linecap="round"/>`;
+/* ---------- Hair styles (drawn at top of head) ---------- */
+function hair(style, outline){
+  const stroke = outline;
+  if(style === "spiky"){
+    // Image 1: zigzag spikes pointing downward — sharp pattern
+    return `<g class="hair">
+      <path d="M55,72 L62,42 L70,72 L78,38 L86,72 L96,32 L104,72 L114,38 L122,72 L132,42 L140,72 Z"
+            fill="${stroke}" opacity=".12"/>
+      <path d="M55,72 L62,42 L70,72 L78,38 L86,72 L96,32 L104,72 L114,38 L122,72 L132,42 L140,72"
+            fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linejoin="round" opacity=".85"/>
+    </g>`;
   }
-  if(type === "sparkle"){
-    return `<ellipse cx="${lx}" cy="${cy}" rx="6" ry="7.5" fill="#1a2438"/>
-            <ellipse cx="${rx}" cy="${cy}" rx="6" ry="7.5" fill="#1a2438"/>
-            <ellipse cx="${lx-2}" cy="${cy-3}" rx="2.2" ry="3" fill="#ffffff"/>
-            <ellipse cx="${rx-2}" cy="${cy-3}" rx="2.2" ry="3" fill="#ffffff"/>
-            <circle cx="${lx+2}" cy="${cy+3}" r="1" fill="#ffffff"/>
-            <circle cx="${rx+2}" cy="${cy+3}" r="1" fill="#ffffff"/>`;
+  if(style === "swoosh"){
+    // Image 2: smooth side-swept wave
+    return `<g class="hair">
+      <path d="M60,76 Q72,42 102,40 Q132,42 144,68 Q132,58 110,56 Q90,58 78,68 Q70,74 60,76 Z"
+            fill="${stroke}" opacity=".15"/>
+      <path d="M60,76 Q72,42 102,40 Q132,42 144,68" fill="none" stroke="${stroke}" stroke-width="1.8" opacity=".85"/>
+      <path d="M84,64 Q98,52 116,52" fill="none" stroke="${stroke}" stroke-width="1.4" opacity=".5"/>
+    </g>`;
   }
-  if(type === "sleepy"){
-    return `<path d="M${lx-7},${cy} Q${lx},${cy+4} ${lx+7},${cy}" fill="none" stroke="#1a2438" stroke-width="3" stroke-linecap="round"/>
-            <path d="M${rx-7},${cy} Q${rx},${cy+4} ${rx+7},${cy}" fill="none" stroke="#1a2438" stroke-width="3" stroke-linecap="round"/>`;
+  if(style === "peaks"){
+    // Image 3: rounded mountain peaks
+    return `<g class="hair">
+      <path d="M58,70 Q70,30 88,68 Q100,30 116,68 Q132,30 142,70 Z"
+            fill="${stroke}" opacity=".13"/>
+      <path d="M58,70 Q70,30 88,68 Q100,30 116,68 Q132,30 142,70"
+            fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linejoin="round" opacity=".85"/>
+    </g>`;
   }
-  // dots — clean, simple
-  return `<circle cx="${lx}" cy="${cy}" r="4.5" fill="#1a2438"/>
-          <circle cx="${rx}" cy="${cy}" r="4.5" fill="#1a2438"/>
-          <circle cx="${lx-1}" cy="${cy-1.5}" r="1.4" fill="#ffffff"/>
-          <circle cx="${rx-1}" cy="${cy-1.5}" r="1.4" fill="#ffffff"/>`;
-}
-
-/* ---------- Mouth (subtle smile) ---------- */
-function mouth(){
-  return `<path d="M92,124 Q100,131 108,124" fill="none" stroke="#1a2438" stroke-width="2.4" stroke-linecap="round"/>`;
-}
-
-/* ---------- Cheeks ---------- */
-function cheeks(type){
-  if(type === "none") return "";
-  const c = type === "pink" ? "#ffb3c1" : "#b8d8e6";
-  return `<ellipse cx="68" cy="124" rx="9" ry="5" fill="${c}" opacity=".75"/>
-          <ellipse cx="132" cy="124" rx="9" ry="5" fill="${c}" opacity=".75"/>`;
-}
-
-/* ---------- Hat ---------- */
-function hat(type, bodyColor){
-  if(type === "none") return "";
-  const dark = _shade(bodyColor, -45);
-
-  if(type === "icicles"){
-    // 4 icicle spikes on top, the signature Frosti look
-    return `
-      <g class="hat-icicles">
-        <path d="M70,52 L77,18 L83,52 Z" fill="${_shade(bodyColor, -8)}" stroke="${dark}" stroke-width="1.6" stroke-linejoin="round"/>
-        <path d="M85,48 L93,8 L100,48 Z" fill="${_shade(bodyColor, -12)}" stroke="${dark}" stroke-width="1.6" stroke-linejoin="round"/>
-        <path d="M100,48 L107,8 L115,48 Z" fill="${_shade(bodyColor, -12)}" stroke="${dark}" stroke-width="1.6" stroke-linejoin="round"/>
-        <path d="M117,52 L123,18 L130,52 Z" fill="${_shade(bodyColor, -8)}" stroke="${dark}" stroke-width="1.6" stroke-linejoin="round"/>
-        <!-- subtle highlights on icicles -->
-        <line x1="79" y1="22" x2="80" y2="44" stroke="#ffffff" stroke-width="1.2" opacity=".55"/>
-        <line x1="95" y1="14" x2="96" y2="42" stroke="#ffffff" stroke-width="1.2" opacity=".55"/>
-        <line x1="109" y1="14" x2="110" y2="42" stroke="#ffffff" stroke-width="1.2" opacity=".55"/>
-        <line x1="121" y1="22" x2="122" y2="44" stroke="#ffffff" stroke-width="1.2" opacity=".55"/>
-      </g>
-    `;
-  }
-  if(type === "beanie"){
-    return `
-      <path d="M48,58 Q100,18 152,58 L150,72 Q100,52 50,72 Z" fill="#3d6fa5" stroke="#1a2438" stroke-width="2"/>
-      <ellipse cx="100" cy="22" rx="14" ry="10" fill="#ffffff"/>
-      <line x1="50" y1="72" x2="150" y2="72" stroke="#2d5585" stroke-width="2"/>
-    `;
-  }
-  if(type === "santa"){
-    return `
-      <path d="M50,60 Q100,22 150,60 L148,72 Q100,54 52,72 Z" fill="#c0392b" stroke="#7a1a14" stroke-width="2"/>
-      <line x1="50" y1="72" x2="150" y2="72" stroke="#ffffff" stroke-width="6"/>
-      <ellipse cx="148" cy="32" rx="12" ry="10" fill="#ffffff"/>
-    `;
-  }
-  if(type === "headband"){
-    return `
-      <rect x="42" y="62" width="116" height="14" rx="6" fill="#6ec5d5" stroke="#1a2438" stroke-width="2"/>
-      <circle cx="100" cy="69" r="4" fill="#ffffff"/>
-      <circle cx="100" cy="69" r="2" fill="#6ec5d5"/>
-    `;
+  if(style === "flame"){
+    // Image 4: tall narrow flame spikes pointing up
+    return `<g class="hair">
+      <path d="M62,72 L68,26 L78,68 L84,18 L94,66 L100,12 L106,66 L116,18 L122,68 L132,26 L138,72 Z"
+            fill="${stroke}" opacity=".14"/>
+      <path d="M62,72 L68,26 L78,68 L84,18 L94,66 L100,12 L106,66 L116,18 L122,68 L132,26 L138,72"
+            fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linejoin="round" opacity=".85"/>
+    </g>`;
   }
   return "";
 }
 
-/* ---------- Glasses ---------- */
-function glasses(type){
-  if(type === "none") return "";
-  if(type === "round"){
-    return `
-      <circle cx="84" cy="108" r="13" fill="none" stroke="#1a2438" stroke-width="2.4"/>
-      <circle cx="116" cy="108" r="13" fill="none" stroke="#1a2438" stroke-width="2.4"/>
-      <line x1="97" y1="108" x2="103" y2="108" stroke="#1a2438" stroke-width="2.4"/>
-      <circle cx="84" cy="106" r="11" fill="#ffffff" opacity=".25"/>
-      <circle cx="116" cy="106" r="11" fill="#ffffff" opacity=".25"/>
-    `;
-  }
-  if(type === "visor"){
-    return `
-      <rect x="60" y="100" width="80" height="20" rx="10" fill="#1a2438" opacity=".9"/>
-      <rect x="64" y="105" width="72" height="6" rx="3" fill="#6ec5d5" opacity=".7"/>
-      <rect x="68" y="106" width="20" height="3" rx="1" fill="#ffffff" opacity=".5"/>
-    `;
-  }
-  if(type === "shades"){
-    return `
-      <path d="M64,102 L102,102 Q104,116 84,118 Q66,116 64,102 Z" fill="#1a2438"/>
-      <path d="M98,102 L136,102 Q134,116 116,118 Q96,116 98,102 Z" fill="#1a2438"/>
-      <line x1="102" y1="106" x2="98" y2="106" stroke="#1a2438" stroke-width="2"/>
-      <ellipse cx="72" cy="106" rx="6" ry="3" fill="#ffffff" opacity=".3"/>
-      <ellipse cx="124" cy="106" rx="6" ry="3" fill="#ffffff" opacity=".3"/>
-    `;
-  }
-  return "";
-}
+/* ---------- Expressions (eyes + mouth + cheeks) ---------- */
+function expression(type, p){
+  const eye = "#0e1b35";
+  const cheek = p.cheek;
+  // Eye positions: left (78, 116), right (122, 116)
+  const lx = 78, rx = 122, cy = 116;
 
-/* ---------- Cape (behind body) ---------- */
-function cape(type){
-  if(type === "none") return "";
-  const colors = {
-    aurora: "#9d77c9",
-    frost:  "#7fb5c8",
-    gold:   "#d8b160",
-  };
-  const c = colors[type] || "#7fb5c8";
-  const d = _shade(c, -25);
-  return `
-    <path d="M40,120 Q100,180 160,120 L155,200 Q100,210 45,200 Z" fill="${c}" stroke="${d}" stroke-width="2"/>
-    ${type === "aurora" ? `<path d="M50,130 Q100,170 150,130 L148,180 Q100,190 52,180 Z" fill="#c4a0ee" opacity=".5"/>` : ''}
-    ${type === "gold"   ? `<circle cx="100" cy="195" r="5" fill="#fef0c8"/>` : ''}
+  let eyesSvg = "";
+  let mouthSvg = "";
+
+  if(type === "smile"){
+    eyesSvg = `
+      <circle cx="${lx}" cy="${cy}" r="3.6" fill="${eye}"/>
+      <circle cx="${rx}" cy="${cy}" r="3.6" fill="${eye}"/>
+      <circle cx="${lx-1}" cy="${cy-1.2}" r="1.1" fill="#fff"/>
+      <circle cx="${rx-1}" cy="${cy-1.2}" r="1.1" fill="#fff"/>`;
+    mouthSvg = `<path d="M91,132 Q100,138 109,132" fill="none" stroke="${eye}" stroke-width="2.2" stroke-linecap="round"/>`;
+  }
+  else if(type === "happy"){
+    // open smile with tongue
+    eyesSvg = `
+      <circle cx="${lx}" cy="${cy}" r="3.6" fill="${eye}"/>
+      <circle cx="${rx}" cy="${cy}" r="3.6" fill="${eye}"/>
+      <circle cx="${lx-1}" cy="${cy-1.2}" r="1.1" fill="#fff"/>
+      <circle cx="${rx-1}" cy="${cy-1.2}" r="1.1" fill="#fff"/>`;
+    mouthSvg = `<path d="M88,130 Q100,144 112,130 Q100,138 88,130 Z" fill="${eye}"/>
+                <ellipse cx="100" cy="138" rx="4" ry="2.5" fill="#5a2a3f" opacity=".7"/>`;
+  }
+  else if(type === "sparkle"){
+    // big eyes with starlike sparkles (image 4)
+    eyesSvg = `
+      <circle cx="${lx}" cy="${cy}" r="4.2" fill="${eye}"/>
+      <circle cx="${rx}" cy="${cy}" r="4.2" fill="${eye}"/>
+      <!-- 4-pointed sparkle on each eye -->
+      <path d="M${lx-1},${cy-3} L${lx},${cy-1.5} L${lx+1.5},${cy-3} L${lx},${cy-4.4} Z" fill="#fff"/>
+      <path d="M${rx-1},${cy-3} L${rx},${cy-1.5} L${rx+1.5},${cy-3} L${rx},${cy-4.4} Z" fill="#fff"/>
+      <circle cx="${lx+1.5}" cy="${cy+2}" r=".8" fill="#fff"/>
+      <circle cx="${rx+1.5}" cy="${cy+2}" r=".8" fill="#fff"/>`;
+    mouthSvg = `<path d="M88,130 Q100,144 112,130 Q100,140 88,130 Z" fill="${eye}"/>`;
+  }
+  else if(type === "wink"){
+    // one eye open, one closed (image 2)
+    eyesSvg = `
+      <circle cx="${lx}" cy="${cy}" r="3.4" fill="${eye}"/>
+      <circle cx="${lx-1}" cy="${cy-1.2}" r="1" fill="#fff"/>
+      <path d="M${rx-5},${cy} Q${rx},${cy+2.5} ${rx+5},${cy}" fill="none" stroke="${eye}" stroke-width="2.4" stroke-linecap="round"/>`;
+    mouthSvg = `<path d="M93,131 Q102,135 110,130" fill="none" stroke="${eye}" stroke-width="2" stroke-linecap="round"/>`;
+  }
+  else if(type === "sleepy"){
+    // closed crescent eyes (image 3)
+    eyesSvg = `
+      <path d="M${lx-5},${cy} Q${lx},${cy+2.5} ${lx+5},${cy}" fill="none" stroke="${eye}" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M${rx-5},${cy} Q${rx},${cy+2.5} ${rx+5},${cy}" fill="none" stroke="${eye}" stroke-width="2.4" stroke-linecap="round"/>`;
+    mouthSvg = `<path d="M93,132 Q100,138 107,132" fill="none" stroke="${eye}" stroke-width="2" stroke-linecap="round"/>`;
+  }
+
+  const cheeksSvg = `
+    <ellipse cx="62" cy="130" rx="8" ry="4.5" fill="${cheek}" opacity=".7"/>
+    <ellipse cx="138" cy="130" rx="8" ry="4.5" fill="${cheek}" opacity=".7"/>
   `;
+
+  return cheeksSvg + eyesSvg + mouthSvg;
 }
 
-/* ---------- Compose ---------- */
-function composeAvatarSVG(a, equipped){
+/* ---------- Compose SVG ---------- */
+function composeAvatarSVG(a){
+  const palette = PALETTES[a.bodyColor] || PALETTES.blue;
   const gid = nextId();
-  return `<svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" style="position:relative;z-index:2;display:block">
-    <!-- ground shadow -->
-    <ellipse cx="100" cy="188" rx="58" ry="6" fill="#1a2438" opacity=".10"/>
+  const bodyGradId = `body_${gid}`;
+  const shadowId = `shadow_${gid}`;
 
-    ${cape(a.cape)}
-    ${bodyAndFeet(a.bodyColor)}
-    ${cheeks(a.cheeks)}
-    ${eyes(a.eyes)}
-    ${mouth()}
-    ${hat(a.hat, a.bodyColor)}
-    ${glasses(a.glasses)}
+  // Special peach has warm-to-cool gradient
+  const isPeach = a.bodyColor === "peach";
+  const topColor = isPeach ? "#fceadc" : palette.top;
+  const midColor = isPeach ? "#f9dccd" : palette.mid;
+  const botColor = isPeach ? "#d8e6f0" : palette.bottom;
+
+  return `<svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" style="position:relative;z-index:2;display:block">
+    <defs>
+      <linearGradient id="${bodyGradId}" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="${topColor}"/>
+        <stop offset=".5" stop-color="${midColor}"/>
+        <stop offset="1" stop-color="${botColor}"/>
+      </linearGradient>
+      <radialGradient id="${shadowId}">
+        <stop offset="0" stop-color="${palette.outline}" stop-opacity=".35"/>
+        <stop offset="1" stop-color="${palette.outline}" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- Ground shadow -->
+    <ellipse cx="100" cy="188" rx="58" ry="6" fill="url(#${shadowId})"/>
+
+    <!-- Body (round/oval, slightly egg-shaped) -->
+    <path d="M100,42
+             C 138,42 168,72 168,114
+             C 168,156 142,182 100,182
+             C 58,182 32,156 32,114
+             C 32,72 62,42 100,42 Z"
+          fill="url(#${bodyGradId})"
+          stroke="${palette.outline}"
+          stroke-width="2"/>
+
+    <!-- Body inner glow / highlight -->
+    <ellipse cx="64" cy="86" rx="22" ry="14" fill="#ffffff" opacity=".7"/>
+    <ellipse cx="58" cy="78" rx="8" ry="5" fill="#ffffff" opacity=".95"/>
+
+    <!-- Hair on top -->
+    ${hair(a.hair, palette.outline)}
+
+    <!-- Face -->
+    ${expression(a.expression, palette)}
   </svg>`;
 }
 
-function auraOverlay(){ return ""; }
-
-function renderAvatarV2(target, avatar, equipped){
+function renderAvatarV2(target, avatar){
   if(!target || !avatar) return;
-  target.innerHTML = composeAvatarSVG(avatar, equipped);
+  target.innerHTML = composeAvatarSVG(avatar);
 }
 
 window.AVATAR_PARTS = AVATAR_PARTS;
