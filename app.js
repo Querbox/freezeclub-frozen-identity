@@ -23,16 +23,16 @@ const RANKS = [
 const LEVEL_STEP = 500;
 
 const SHOP_ITEMS = [
-  { id: "aura-frost",  name: "Frost Aura",      cat: "aura", price: 250,  emoji: "❄", limited: false },
-  { id: "aura-arctic", name: "Arctic Glow",     cat: "aura", price: 600,  emoji: "✨", limited: false },
-  { id: "aura-cryo",   name: "Cryo Crystals",   cat: "aura", price: 1400, emoji: "💎", limited: true  },
-  { id: "gear-suit",   name: "Cryo Suit",       cat: "gear", price: 800,  emoji: "🥼", limited: false },
-  { id: "gear-mask",   name: "Breath Mask",     cat: "gear", price: 450,  emoji: "😷", limited: false },
-  { id: "gear-visor",  name: "Lab Visor",       cat: "gear", price: 700,  emoji: "🥽", limited: false },
-  { id: "gear-hoodie", name: "Recovery Hoodie", cat: "gear", price: 550,  emoji: "🧊", limited: false },
-  { id: "env-cave",    name: "Ice Cave",        cat: "env",  price: 1100, emoji: "🏔", limited: false },
-  { id: "env-lab",     name: "Bio Lab",         cat: "env",  price: 900,  emoji: "🧪", limited: false },
-  { id: "env-summit",  name: "Alpine Summit",   cat: "env",  price: 1800, emoji: "⛰", limited: true  },
+  { id: "aura-frost",  name: "Frost Aura",      cat: "aura", price: 250,  emoji: "❄️", limited: false, color: "#5b8db0", preview: "#a8d0e0" },
+  { id: "aura-arctic", name: "Arctic Glow",     cat: "aura", price: 600,  emoji: "✨", limited: false, color: "#4a7a90", preview: "#b8d8e6" },
+  { id: "aura-cryo",   name: "Cryo Crystals",   cat: "aura", price: 1400, emoji: "💎", limited: true,  color: "#8e5fbf", preview: "#d4c0e8" },
+  { id: "gear-suit",   name: "Cryo Suit",       cat: "gear", price: 800,  emoji: "🥼", limited: false, color: "#3a4a5c", preview: "#7c98b0" },
+  { id: "gear-mask",   name: "Breath Mask",     cat: "gear", price: 450,  emoji: "😷", limited: false, color: "#c8826b", preview: "#f0c4b0" },
+  { id: "gear-visor",  name: "Lab Visor",       cat: "gear", price: 700,  emoji: "🥽", limited: false, color: "#2b5a6e", preview: "#8ec5d5" },
+  { id: "gear-hoodie", name: "Recovery Hoodie", cat: "gear", price: 550,  emoji: "🧥", limited: false, color: "#d8a857", preview: "#f5dc9a" },
+  { id: "env-cave",    name: "Ice Cave",        cat: "env",  price: 1100, emoji: "🏔️", limited: false, color: "#4a6a82", preview: "#a8c8d8" },
+  { id: "env-lab",     name: "Bio Lab",         cat: "env",  price: 900,  emoji: "🧪", limited: false, color: "#5a8a6e", preview: "#a8d4b8" },
+  { id: "env-summit",  name: "Alpine Summit",   cat: "env",  price: 1800, emoji: "⛰️", limited: true,  color: "#8a6a4a", preview: "#d8c4a8" },
 ];
 
 const ACHIEVEMENTS = [
@@ -450,22 +450,36 @@ function randomizeAvatar(){
 }
 
 let currentFilter = "all";
+let shopMode = "shop"; // "shop" or "inventory"
 function renderShop(filter = currentFilter){
-  const items = SHOP_ITEMS.filter(i => filter === "all" || i.cat === filter);
+  let items = SHOP_ITEMS.filter(i => filter === "all" || i.cat === filter);
+  if(shopMode === "inventory"){
+    items = items.filter(i => state.inventory.includes(i.id));
+  }
+  if(items.length === 0){
+    $("#shopGrid").innerHTML = `<div class="shop-empty">
+      <div class="shop-empty__icon">${shopMode === 'inventory' ? '📦' : '✨'}</div>
+      <p class="shop-empty__text">${shopMode === 'inventory' ? 'Noch keine Items im Inventar.' : 'Keine Items in dieser Kategorie.'}</p>
+    </div>`;
+    return;
+  }
   $("#shopGrid").innerHTML = items.map(i => {
     const owned = state.inventory.includes(i.id);
     const equipped = state.equipped[i.cat] === i.id;
     const canBuy = state.points >= i.price;
-    return `<article class="item">
+    const cardBg = `linear-gradient(180deg, ${shade(i.color, 18)}, ${shade(i.color, -8)})`;
+    const previewBg = `radial-gradient(circle at 35% 30%, #fff, ${i.preview} 60%, ${shade(i.preview, -15)} 100%)`;
+    return `<article class="item" style="--card-bg:${cardBg}; --preview-bg:${previewBg}">
       <div class="item__preview ${i.limited?'is-limited':''}">${i.emoji}</div>
-      <span class="item__category">${catLabel(i.cat)}</span>
       <span class="item__name">${esc(i.name)}</span>
       <div class="item__footer">
         ${owned
-          ? `<span class="price is-owned">✓ Owned</span>
-             <button class="btn--equip ${equipped?'is-equipped':''}" data-equip="${esc(i.id)}">${equipped?'Equipped':'Equip'}</button>`
-          : `<span class="price">${i.price} FP</span>
-             <button class="btn--buy" data-buy="${esc(i.id)}" ${canBuy?'':'disabled'}>${canBuy?'Unlock':'Locked'}</button>`}
+          ? (equipped
+              ? `<button class="btn--equip is-equipped" data-equip="${esc(i.id)}">✓ Aktiv</button>`
+              : `<button class="btn--equip" data-equip="${esc(i.id)}">Anziehen</button>`)
+          : (canBuy
+              ? `<button class="btn--buy" data-buy="${esc(i.id)}"><span class="price">${i.price}</span></button>`
+              : `<button class="btn--buy" disabled><span class="price">${i.price}</span></button>`)}
       </div>
     </article>`;
   }).join("");
@@ -679,13 +693,23 @@ function bindEvents(){
     if(eq){ equipItem(eq.dataset.equip); return; }
   });
 
-  $("#shopFilters").addEventListener("click", e => {
-    const c = e.target.closest(".chip");
+  $("#shopFilters")?.addEventListener("click", e => {
+    const c = e.target.closest(".shop-cat");
     if(!c) return;
     sfx("click");
-    $$("#shopFilters .chip").forEach(x => x.classList.remove("is-active"));
+    $$("#shopFilters .shop-cat").forEach(x => x.classList.remove("is-active"));
     c.classList.add("is-active");
     currentFilter = c.dataset.filter;
+    renderShop(currentFilter);
+  });
+
+  $("#shopToggle")?.addEventListener("click", e => {
+    const b = e.target.closest(".shop-toggle__btn");
+    if(!b) return;
+    sfx("click");
+    $$("#shopToggle .shop-toggle__btn").forEach(x => x.classList.remove("is-active"));
+    b.classList.add("is-active");
+    shopMode = b.dataset.tab;
     renderShop(currentFilter);
   });
 

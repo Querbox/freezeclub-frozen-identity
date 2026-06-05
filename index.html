@@ -185,19 +185,34 @@
 
       <!-- SHOP -->
       <section class="view" id="view-shop">
-        <header class="view__header">
-          <div>
-            <p class="eyebrow">Item Lab</p>
-            <h2 class="h1">Avatar-Shop</h2>
+        <header class="shop-header">
+          <div class="shop-toggle" id="shopToggle">
+            <button class="shop-toggle__btn is-active" data-tab="shop">Shop</button>
+            <button class="shop-toggle__btn" data-tab="inventory">Inventar</button>
           </div>
-          <span class="hud-pill"><span class="hud-pill__icon">◆</span><span><span class="hud-pill__label">verfügbar</span><br/><span class="hud-pill__num"><span id="shopPoints">0</span> FP</span></span></span>
+          <span class="currency-badge">
+            <span class="currency-badge__icon">
+              <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z" fill="currentColor"/></svg>
+            </span>
+            <span class="currency-badge__num" id="shopPoints">0</span>
+          </span>
         </header>
-        <div class="filters" id="shopFilters">
-          <button class="chip is-active" data-filter="all">Alle</button>
-          <button class="chip" data-filter="aura">Aura</button>
-          <button class="chip" data-filter="gear">Gear</button>
-          <button class="chip" data-filter="env">Environment</button>
+
+        <div class="shop-cats" id="shopFilters" role="tablist">
+          <button class="shop-cat is-active" data-filter="all" aria-label="Alle">
+            <svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+          </button>
+          <button class="shop-cat" data-filter="aura" aria-label="Aura">
+            <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.4" fill="none" opacity=".7"/><circle cx="12" cy="12" r="10.5" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".4"/></svg>
+          </button>
+          <button class="shop-cat" data-filter="gear" aria-label="Gear">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 8l4-3h6l4 3v3l-3 1v6l-3 1h-2l-3-1v-6L5 11z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="shop-cat" data-filter="env" aria-label="Environment">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 18l5-8 4 5 3-3 6 6H3z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="17" cy="6" r="2" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+          </button>
         </div>
+
         <div class="shop-grid" id="shopGrid"></div>
       </section>
 
