@@ -141,18 +141,67 @@ function expression(type, p){
   return cheeksSvg + eyesSvg + mouthSvg;
 }
 
+/* ---------- Evolution Stages (tied to level) ----------
+   Level 1 → Frostknospe       — small, plain, no hair
+   Level 2 → Eiskeim           — small crown begins, base color
+   Level 3 → Kristallwächter   — full crown, sparkle frost dots
+   Level 4 → Eismeister        — gold accent line, full
+   Level 5+ → Polarchampion    — aura ring, full majesty
+*/
+const STAGE_INFO = [
+  { id: 1, name: "Frostknospe",     scale: 0.78, showHair: false, accent: null,    glow: false },
+  { id: 2, name: "Eiskeim",         scale: 0.86, showHair: true,  accent: null,    glow: false },
+  { id: 3, name: "Kristallwächter", scale: 0.95, showHair: true,  accent: "frost", glow: false },
+  { id: 4, name: "Eismeister",      scale: 1.0,  showHair: true,  accent: "gold",  glow: false },
+  { id: 5, name: "Polarchampion",   scale: 1.0,  showHair: true,  accent: "gold",  glow: true  },
+];
+
+function stageFor(level){
+  const idx = Math.max(0, Math.min(STAGE_INFO.length - 1, (level || 1) - 1));
+  return STAGE_INFO[idx];
+}
+
+function accentDecoration(type){
+  if(type === "frost"){
+    return `
+      <circle cx="44" cy="98" r="2" fill="#a8c8e6" opacity=".7"/>
+      <circle cx="156" cy="108" r="1.8" fill="#a8c8e6" opacity=".7"/>
+      <path d="M40,80 L46,80 M43,77 L43,83" stroke="#a8c8e6" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M160,138 L166,138 M163,135 L163,141" stroke="#a8c8e6" stroke-width="1.4" stroke-linecap="round"/>
+    `;
+  }
+  if(type === "gold"){
+    return `
+      <circle cx="44" cy="98" r="2" fill="#e6b85a"/>
+      <circle cx="156" cy="108" r="1.8" fill="#e6b85a"/>
+      <path d="M100,46 L104,52 L100,58 L96,52 Z" fill="#e6b85a" opacity=".85"/>
+      <path d="M40,80 L46,80 M43,77 L43,83" stroke="#e6b85a" stroke-width="1.4" stroke-linecap="round"/>
+    `;
+  }
+  return "";
+}
+
 /* ---------- Compose SVG ---------- */
-function composeAvatarSVG(a){
+function composeAvatarSVG(a, opts){
   const palette = PALETTES[a.bodyColor] || PALETTES.blue;
   const gid = nextId();
   const bodyGradId = `body_${gid}`;
   const shadowId = `shadow_${gid}`;
+  const glowId = `glow_${gid}`;
 
-  // Special peach has warm-to-cool gradient
+  const stage = opts && opts.stage ? opts.stage : stageFor(opts && opts.level ? opts.level : 1);
+  const showHair = stage.showHair !== false;
+  const accent = stage.accent;
+  const showGlow = stage.glow;
+
   const isPeach = a.bodyColor === "peach";
   const topColor = isPeach ? "#fceadc" : palette.top;
   const midColor = isPeach ? "#f9dccd" : palette.mid;
   const botColor = isPeach ? "#d8e6f0" : palette.bottom;
+
+  // scale around the body center
+  const scale = stage.scale;
+  const translateY = (1 - scale) * 60;
 
   return `<svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" style="position:relative;z-index:2;display:block">
     <defs>
@@ -165,37 +214,44 @@ function composeAvatarSVG(a){
         <stop offset="0" stop-color="${palette.outline}" stop-opacity=".35"/>
         <stop offset="1" stop-color="${palette.outline}" stop-opacity="0"/>
       </radialGradient>
+      ${showGlow ? `<radialGradient id="${glowId}">
+        <stop offset="0" stop-color="#e6b85a" stop-opacity=".35"/>
+        <stop offset=".6" stop-color="#fff6d8" stop-opacity=".15"/>
+        <stop offset="1" stop-color="#e6b85a" stop-opacity="0"/>
+      </radialGradient>` : ''}
     </defs>
 
-    <!-- Ground shadow -->
-    <ellipse cx="100" cy="188" rx="58" ry="6" fill="url(#${shadowId})"/>
+    ${showGlow ? `<circle cx="100" cy="112" r="92" fill="url(#${glowId})"/>` : ''}
 
-    <!-- Body (round/oval, slightly egg-shaped) -->
-    <path d="M100,42
-             C 138,42 168,72 168,114
-             C 168,156 142,182 100,182
-             C 58,182 32,156 32,114
-             C 32,72 62,42 100,42 Z"
-          fill="url(#${bodyGradId})"
-          stroke="${palette.outline}"
-          stroke-width="2"/>
+    <ellipse cx="100" cy="188" rx="${58*scale}" ry="6" fill="url(#${shadowId})"/>
 
-    <!-- Body inner glow / highlight -->
-    <ellipse cx="64" cy="86" rx="22" ry="14" fill="#ffffff" opacity=".7"/>
-    <ellipse cx="58" cy="78" rx="8" ry="5" fill="#ffffff" opacity=".95"/>
+    <g transform="translate(${100 - 100*scale}, ${translateY}) scale(${scale})">
+      <path d="M100,42
+               C 138,42 168,72 168,114
+               C 168,156 142,182 100,182
+               C 58,182 32,156 32,114
+               C 32,72 62,42 100,42 Z"
+            fill="url(#${bodyGradId})"
+            stroke="${palette.outline}"
+            stroke-width="${2/scale}"/>
 
-    <!-- Hair on top -->
-    ${hair(a.hair, palette.outline)}
+      <ellipse cx="64" cy="86" rx="22" ry="14" fill="#ffffff" opacity=".7"/>
+      <ellipse cx="58" cy="78" rx="8" ry="5" fill="#ffffff" opacity=".95"/>
 
-    <!-- Face -->
-    ${expression(a.expression, palette)}
+      ${showHair ? hair(a.hair, palette.outline) : ''}
+      ${expression(a.expression, palette)}
+      ${accent ? accentDecoration(accent) : ''}
+    </g>
   </svg>`;
 }
 
-function renderAvatarV2(target, avatar){
+function renderAvatarV2(target, avatar, opts){
   if(!target || !avatar) return;
-  target.innerHTML = composeAvatarSVG(avatar);
+  target.innerHTML = composeAvatarSVG(avatar, opts);
 }
+
+window.STAGE_INFO = STAGE_INFO;
+window.stageFor = stageFor;
 
 window.AVATAR_PARTS = AVATAR_PARTS;
 window.PART_LABELS = PART_LABELS;

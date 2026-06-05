@@ -72,10 +72,15 @@ const sleep = ms => new Promise(r=>setTimeout(r,ms));
 /* ---------- State ---------- */
 const defaultState = () => ({
   onboarded: false,
-  firstName: "", goal: "recovery", style: "arctic",
+  firstName: "", goal: "recovery",
   userId: "FZ-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
   points: 0, seasonPoints: 0, totalPoints: 0,
-  visits: 0, streak: 0, lastVisitDate: null,
+  visits: 0,
+  weekGoal: 2,
+  weekVisits: 0,
+  weekKey: null,
+  weeklyStreak: 0,
+  lastVisitDate: null,
   level: 1,
   counts: {}, inventory: [],
   equipped: { aura: null, gear: null, env: null },
@@ -84,6 +89,27 @@ const defaultState = () => ({
   avatar: window.defaultAvatar ? window.defaultAvatar() : null,
   createdAt: new Date().toISOString(),
 });
+
+function isoWeekKey(d){
+  d = d || new Date();
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return date.getUTCFullYear() + "-W" + String(weekNo).padStart(2,"0");
+}
+function prevIsoWeekKey(weekKey){
+  const m = /^(\d{4})-W(\d{2})$/.exec(weekKey || "");
+  if(!m) return null;
+  const year = parseInt(m[1],10), week = parseInt(m[2],10);
+  const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
+  const dow = simple.getUTCDay() || 7;
+  const monday = new Date(simple);
+  monday.setUTCDate(simple.getUTCDate() - dow + 1);
+  monday.setUTCDate(monday.getUTCDate() - 7);
+  return isoWeekKey(monday);
+}
 
 let state = load();
 
@@ -139,9 +165,66 @@ function tone(freq, dur, vol, type, t){
 /* ---------- Avatar SVG (v2 wrapper) ---------- */
 function renderAvatar(target, opts = {}){
   if(window.renderAvatarV2 && state.avatar){
-    return window.renderAvatarV2(target, opts.avatar || state.avatar, opts.equipped || state.equipped);
+    const level = opts.level || Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
+    const stage = opts.stage || (window.stageFor ? window.stageFor(level) : null);
+    return window.renderAvatarV2(target, opts.avatar || state.avatar, { level, stage });
   }
   return _renderAvatarLegacy(target, opts);
+}
+
+function renderEvolutionPath(currentLevel){
+  const wrap = document.getElementById("evolutionPath");
+  if(!wrap || !window.STAGE_INFO || !state.avatar) return;
+  wrap.innerHTML = window.STAGE_INFO.map(stage => {
+    const isCurrent = stage.id === currentLevel;
+    const isLocked = stage.id > currentLevel;
+    return `<div class="evo-stage ${isCurrent?'is-current':''} ${isLocked?'is-locked':''}">
+      <div class="evo-stage__art" data-evo-id="${stage.id}"></div>
+      <div class="evo-stage__lvl">Lvl ${stage.id}</div>
+      <div class="evo-stage__name">${esc(stage.name)}</div>
+      ${isLocked ? '<div class="evo-stage__lock">🔒</div>' : ''}
+    </div>`;
+  }).join("");
+  // Render each evolution stage avatar
+  window.STAGE_INFO.forEach(stage => {
+    const t = wrap.querySelector(`[data-evo-id="${stage.id}"]`);
+    if(t) window.renderAvatarV2(t, state.avatar, { level: stage.id, stage });
+  });
+}
+
+/* ---------- Community Challenge ---------- */
+const COMMUNITY = {
+  title: "Gemeinsam 1.000 Kältekammer-Minuten",
+  goal: 1000,
+  progress: 732,
+  daysLeft: 8,
+  reward: "Limited Polar-Mütze für alle Teilnehmer",
+};
+function renderCommunityChallenge(){
+  const card = document.getElementById("communityCard");
+  if(!card) return;
+  const pct = Math.min(100, COMMUNITY.progress / COMMUNITY.goal * 100);
+  card.innerHTML = `
+    <div class="community__head">
+      <div>
+        <p class="eyebrow eyebrow--light">Community Challenge</p>
+        <h3 class="card__title" style="color:#fff">${esc(COMMUNITY.title)}</h3>
+      </div>
+      <span class="community__time">Noch ${COMMUNITY.daysLeft} Tage</span>
+    </div>
+    <p class="community__desc">Als Community haben wir bereits <strong>${COMMUNITY.progress}</strong> von ${COMMUNITY.goal} Minuten erreicht. Jeder Besuch zählt!</p>
+    <div class="progress">
+      <div class="progress__bar"><div class="progress__fill" style="width:${pct}%"></div></div>
+      <div class="progress__meta">
+        <span>${COMMUNITY.progress} / ${COMMUNITY.goal} Min.</span>
+        <span>${Math.round(pct)} %</span>
+      </div>
+    </div>
+    <div class="community__reward">
+      <span class="community__reward-icon">🎁</span>
+      <span>${esc(COMMUNITY.reward)}</span>
+    </div>
+  `;
 }
 function _renderAvatarLegacy(target, opts = {}){
   const style = opts.style || state.style || "arctic";
@@ -305,8 +388,10 @@ function renderAll(animate=false){
     $("#statVisits").textContent = state.visits;
   }
 
-  $("#greetName").textContent = state.firstName || "Member";
-  $("#streakCount").textContent = state.streak;
+  const greetName = $("#greetName"); if(greetName) greetName.textContent = state.firstName || "Frosti";
+  const streakCount = $("#streakCount"); if(streakCount) streakCount.textContent = state.weeklyStreak || 0;
+  const weekVisits = $("#weekVisits"); if(weekVisits) weekVisits.textContent = state.weekVisits || 0;
+  const weekGoal = $("#weekGoal"); if(weekGoal) weekGoal.textContent = state.weekGoal || 2;
 
   const level = Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
   const into = state.seasonPoints % LEVEL_STEP;
@@ -320,7 +405,10 @@ function renderAll(animate=false){
   const nextRank = $("#nextRank"); if(nextRank) nextRank.textContent = rank.next.name;
   const avatarName = $("#avatarName"); if(avatarName) avatarName.textContent = state.firstName ? state.firstName : "Frosti";
 
-  renderAvatar($("#avatarStage"));
+  const currentLevel = Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
+  renderAvatar($("#avatarStage"), { level: currentLevel });
+  renderEvolutionPath(currentLevel);
+  renderCommunityChallenge();
   renderAvatarMeta();
   $("#userId").textContent = state.userId;
   renderQR($("#qrCode"), state.userId);
@@ -348,19 +436,24 @@ function renderAll(animate=false){
     `).join("");
   }
 
-  // Week tracker
+  // Week tracker — weekly goal, Sunday is closed
   const wt = $("#weekTrack");
   if(wt){
     const days = ["Mo","Di","Mi","Do","Fr","Sa","So"];
     const today = new Date();
-    const dow = (today.getDay() + 6) % 7; // 0 = Mo
+    const dow = (today.getDay() + 6) % 7;
+    const visitsThisWeek = state.weekVisits || 0;
+    const goal = state.weekGoal || 2;
     wt.innerHTML = days.map((d,i) => {
-      const done = i < state.streak && i <= dow;
+      const isClosed = i === 6;
       const isToday = i === dow;
-      return `<div class="day ${done?'is-done':''} ${isToday?'is-today':''}">
+      const filled = !isClosed && i < dow && i < visitsThisWeek;
+      return `<div class="day ${filled?'is-done':''} ${isToday?'is-today':''} ${isClosed?'is-closed':''}">
         <span class="day__label">${d}</span>
         <span class="day__dot">
-          <svg class="day__icon" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ${isClosed
+            ? '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+            : '<svg class="day__icon" viewBox="0 0 24 24" width="16" height="16"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
         </span>
       </div>`;
     }).join("");
@@ -548,12 +641,26 @@ function bookService(id, evtTarget){
   state.visits += 1;
   state.counts[id] = (state.counts[id]||0) + 1;
 
-  const today = new Date().toDateString();
-  const last = state.lastVisitDate ? new Date(state.lastVisitDate).toDateString() : null;
-  if(last !== today){
-    const yest = new Date(Date.now()-86400000).toDateString();
-    state.streak = (last === yest) ? state.streak + 1 : 1;
-    state.lastVisitDate = new Date().toISOString();
+  // Weekly streak logic (Sundays don't count, weekly goal-based)
+  const now = new Date();
+  const currentWeek = isoWeekKey(now);
+  if(state.weekKey !== currentWeek){
+    // Week changed — evaluate previous week's streak result
+    if(state.weekKey){
+      const prevExpected = prevIsoWeekKey(currentWeek);
+      const prevHitGoal = (state.weekKey === prevExpected) && (state.weekVisits >= state.weekGoal);
+      state.weeklyStreak = prevHitGoal ? (state.weeklyStreak || 0) + 1 : 0;
+    }
+    state.weekKey = currentWeek;
+    state.weekVisits = 0;
+  }
+  state.weekVisits += 1;
+  state.lastVisitDate = now.toISOString();
+
+  // Bonus when weekly goal first reached
+  if(state.weekVisits === state.weekGoal){
+    state.points += 100; state.seasonPoints += 100; state.totalPoints += 100;
+    setTimeout(() => toast(`Wochenziel erreicht · +100 Bonus`, 3200), 800);
   }
 
   for(const c of CHALLENGES){
@@ -788,6 +895,21 @@ function boot(){
   if(!state.avatar || !state.avatar.bodyColor || !state.avatar.hair || !state.avatar.expression
      || !["blue","mint","lavender","peach"].includes(state.avatar.bodyColor)){
     state.avatar = window.defaultAvatar();
+    save();
+  }
+  // Migrate older daily-streak schema to weekly
+  if(!state.weekGoal) state.weekGoal = 2;
+  if(state.weekKey === undefined) state.weekKey = null;
+  if(state.weekVisits === undefined) state.weekVisits = 0;
+  if(state.weeklyStreak === undefined) state.weeklyStreak = 0;
+  // If a new week started since last load, reset weekly counter without breaking streak
+  const currentWeek = isoWeekKey(new Date());
+  if(state.weekKey && state.weekKey !== currentWeek){
+    const prevExpected = prevIsoWeekKey(currentWeek);
+    const hit = (state.weekKey === prevExpected) && (state.weekVisits >= state.weekGoal);
+    state.weeklyStreak = hit ? (state.weeklyStreak || 0) + 1 : 0;
+    state.weekVisits = 0;
+    state.weekKey = currentWeek;
     save();
   }
   window.renderAvatarV2($("#onboardingAvatar"), state.avatar);

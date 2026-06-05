@@ -125,12 +125,28 @@
           </article>
 
           <article class="card">
-            <span class="eyebrow">Täglicher Check-in</span>
+            <span class="eyebrow">Dein Wochenziel</span>
             <div class="card__header" style="margin:0">
-              <h3 class="card__title">Streak: <span id="streakCount">0</span> Tage</h3>
-              <span class="streak-pill"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3s4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-3s1 2 3 2c0-3-3-5 0-8z" fill="currentColor"/></svg></span>
+              <h3 class="card__title"><span id="weekVisits">0</span> / <span id="weekGoal">2</span> Besuche</h3>
+              <span class="streak-pill" title="Wochen-Streak">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3s4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-3s1 2 3 2c0-3-3-5 0-8z" fill="currentColor"/></svg>
+                <span class="streak-pill__num"><span id="streakCount">0</span></span>
+              </span>
             </div>
+            <p class="muted small" style="margin:0">Sonntags ist der Freezeclub geschlossen. Sammle deine Besuche von Mo–Sa.</p>
             <div class="week-track" id="weekTrack"></div>
+          </article>
+
+          <article class="card card--community" id="communityCard"></article>
+
+          <article class="card card--evolution">
+            <div class="card__header" style="margin:0">
+              <div>
+                <span class="eyebrow">Avatar-Entwicklung</span>
+                <h3 class="card__title">Frostis Reise</h3>
+              </div>
+            </div>
+            <div class="evolution-path" id="evolutionPath"></div>
           </article>
 
           <article class="card">
