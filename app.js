@@ -374,19 +374,15 @@ function rankFor(total){
 
 /* ---------- Rendering ---------- */
 function renderAll(animate=false){
-  if(animate){
-    animateNumber($("#topPoints"), state.points);
-    animateNumber($("#shopPoints"), state.points);
-    animateNumber($("#statSeason"), state.seasonPoints);
-    animateNumber($("#statTotal"), state.totalPoints);
-    animateNumber($("#statVisits"), state.visits);
-  } else {
-    $("#topPoints").textContent = state.points.toLocaleString("de-DE");
-    $("#shopPoints").textContent = state.points.toLocaleString("de-DE");
-    $("#statSeason").textContent = state.seasonPoints.toLocaleString("de-DE");
-    $("#statTotal").textContent  = state.totalPoints.toLocaleString("de-DE");
-    $("#statVisits").textContent = state.visits;
-  }
+  const setNum = (sel, val) => { const el = $(sel); if(!el) return; if(animate) animateNumber(el, val); else el.textContent = val.toLocaleString("de-DE"); };
+  setNum("#topPoints", state.points);
+  setNum("#shopPoints", state.points);
+  setNum("#statSeason", state.seasonPoints);
+  setNum("#statTotal", state.totalPoints);
+  setNum("#statVisits", state.visits);
+
+  // Quick-action subtexts
+  const qaPoints = $("#qaPoints"); if(qaPoints) qaPoints.textContent = state.points.toLocaleString("de-DE") + " Pkt";
 
   const greetName = $("#greetName"); if(greetName) greetName.textContent = state.firstName || "Frosti";
   const streakCount = $("#streakCount"); if(streakCount) streakCount.textContent = state.weeklyStreak || 0;
@@ -395,10 +391,10 @@ function renderAll(animate=false){
 
   const level = Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
   const into = state.seasonPoints % LEVEL_STEP;
-  $("#levelNum").textContent = level;
-  $("#seasonPoints").textContent = into;
-  $("#seasonGoal").textContent = LEVEL_STEP;
-  setTimeout(() => $("#levelFill").style.width = (into/LEVEL_STEP*100) + "%", 100);
+  const levelNum = $("#levelNum"); if(levelNum) levelNum.textContent = level;
+  const sp = $("#seasonPoints"); if(sp) sp.textContent = into;
+  const sg = $("#seasonGoal"); if(sg) sg.textContent = LEVEL_STEP;
+  setTimeout(() => { const f = $("#levelFill"); if(f) f.style.width = (into/LEVEL_STEP*100) + "%" }, 100);
   const rank = rankFor(state.totalPoints);
   $("#rankLabel").textContent = rank.current.name;
   const ptsToNext = $("#ptsToNext"); if(ptsToNext) ptsToNext.textContent = rank.toNext;
@@ -490,7 +486,10 @@ function renderAll(animate=false){
   }).join("");
 
   const me = { name: (state.firstName || "Du") + " (Du)", pts: state.seasonPoints, me: true };
-  const list = [...LEADERBOARD_MOCK, me].sort((a,b)=>b.pts-a.pts).slice(0, 12);
+  const fullList = [...LEADERBOARD_MOCK, me].sort((a,b)=>b.pts-a.pts);
+  const myRank = fullList.findIndex(u => u.me) + 1;
+  const qaRank = $("#qaRank"); if(qaRank) qaRank.textContent = `Platz ${myRank} von ${fullList.length}`;
+  const list = fullList.slice(0, 12);
   $("#leaderboardList").innerHTML = list.map((u,i)=>`
     <li class="${u.me?'is-me':''}">
       <span class="rank">${String(i+1).padStart(2,'0')}</span>

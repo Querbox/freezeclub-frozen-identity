@@ -168,81 +168,75 @@
         </div>
       </nav>
 
-      <!-- HOME -->
+      <!-- HOME (mobile-first, simplified) -->
       <section class="view is-active" id="view-home">
-        <div class="grid grid--home">
-          <article class="card card--avatar">
-            <div class="card__header">
-              <div>
-                <p class="eyebrow">Saison · Arktische Expedition</p>
-                <h3 class="card__title" id="avatarName">Frosti</h3>
-                <p class="muted" style="color:rgba(255,255,255,.85);margin:0;font-size:14px"><span id="rankLabel">Frostknospe</span> · Level <span id="levelNum">1</span></p>
-              </div>
-              <span class="level-badge">Saison</span>
+        <!-- Hero: Avatar + Level -->
+        <article class="hero-frosti">
+          <div class="hero-frosti__avatar avatar-stage">
+            <div class="avatar-stage__avatar" id="avatarStage"></div>
+          </div>
+          <div class="hero-frosti__meta">
+            <span class="hero-frosti__rank" id="rankLabel">Frostknospe</span>
+            <h2 class="hero-frosti__name" id="avatarName">Frosti</h2>
+            <div class="hero-frosti__lvl">
+              <span>Level <strong id="levelNum">1</strong></span>
+              <span class="dim"><span id="seasonPoints">0</span> / <span id="seasonGoal">500</span></span>
             </div>
-            <div class="avatar-stage">
-              <div class="avatar-stage__avatar" id="avatarStage"></div>
-            </div>
-            <div class="progress">
-              <div class="progress__meta">
-                <span>Noch <strong id="ptsToNext">300</strong> Punkte bis <strong id="nextRank">Kristallwächter</strong></span>
-              </div>
-              <div class="progress__bar"><div class="progress__fill" id="levelFill"></div></div>
-              <div class="progress__meta" style="margin-top:8px">
-                <span><span id="seasonPoints">0</span> / <span id="seasonGoal">500</span></span>
-              </div>
-              <button class="btn--cta" data-go="editor">Avatar ansehen</button>
-            </div>
-          </article>
+            <div class="hero-frosti__bar"><div class="hero-frosti__fill" id="levelFill"></div></div>
+            <button class="hero-frosti__cta" data-go="editor">Avatar anpassen</button>
+          </div>
+        </article>
 
-          <article class="card">
-            <span class="eyebrow">Deine Booster</span>
-            <h3 class="card__title">Anwendungen</h3>
-            <p class="muted small">Jede Session sammelt Eis-Punkte und stärkt Frosti.</p>
-            <div class="boosters" id="boostersList"></div>
-          </article>
-
-          <article class="card">
-            <span class="eyebrow">Dein Wochenziel</span>
-            <div class="card__header" style="margin:0">
-              <h3 class="card__title"><span id="weekVisits">0</span> / <span id="weekGoal">2</span> Besuche</h3>
-              <span class="streak-pill" title="Wochen-Streak">
-                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3s4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-3s1 2 3 2c0-3-3-5 0-8z" fill="currentColor"/></svg>
-                <span class="streak-pill__num"><span id="streakCount">0</span></span>
-              </span>
-            </div>
-            <p class="muted small" style="margin:0">Sonntags ist der Freezeclub geschlossen. Sammle deine Besuche von Mo–Sa.</p>
-            <div class="week-track" id="weekTrack"></div>
-          </article>
-
-          <article class="card card--community" id="communityCard"></article>
-
-          <article class="card card--evolution">
-            <div class="card__header" style="margin:0">
-              <div>
-                <span class="eyebrow">Avatar-Entwicklung</span>
-                <h3 class="card__title">Frostis Reise</h3>
-              </div>
-            </div>
-            <div class="evolution-path" id="evolutionPath"></div>
-          </article>
-
-          <article class="card">
-            <span class="eyebrow">Saison im Überblick</span>
-            <h3 class="card__title">Deine Statistik</h3>
-            <div class="stat-row">
-              <div class="stat"><span class="stat__label">Saison</span><span class="stat__value"><span id="statSeason">0</span></span></div>
-              <div class="stat"><span class="stat__label">Gesamt</span><span class="stat__value"><span id="statTotal">0</span></span></div>
-              <div class="stat"><span class="stat__label">Besuche</span><span class="stat__value"><span id="statVisits">0</span></span></div>
-            </div>
-          </article>
-
-          <article class="card">
-            <span class="eyebrow">Achievements</span>
-            <h3 class="card__title">Deine Badges</h3>
-            <ul class="achievements" id="achievementsList"></ul>
-          </article>
+        <!-- Quick Action Pills -->
+        <div class="quick-actions">
+          <button class="qa" data-go="leaderboard">
+            <span class="qa__icon">🏆</span>
+            <div class="qa__text"><span class="qa__label">Rang</span><span class="qa__sub" id="qaRank">—</span></div>
+            <span class="qa__chev">›</span>
+          </button>
+          <button class="qa" data-go="shop">
+            <span class="qa__icon">🛍️</span>
+            <div class="qa__text"><span class="qa__label">Shop</span><span class="qa__sub" id="qaPoints">0 Pkt</span></div>
+            <span class="qa__chev">›</span>
+          </button>
+          <button class="qa" data-go="challenges">
+            <span class="qa__icon">🎁</span>
+            <div class="qa__text"><span class="qa__label">Belohnungen</span><span class="qa__sub">Mehr ansehen</span></div>
+            <span class="qa__chev">›</span>
+          </button>
         </div>
+
+        <!-- Wochenziel Card -->
+        <article class="card card--week">
+          <header class="card-row">
+            <div>
+              <p class="eyebrow">Wochenziel</p>
+              <h3 class="card__title"><span id="weekVisits">0</span> / <span id="weekGoal">2</span> Besuche</h3>
+            </div>
+            <span class="streak-chip" title="Wochen-Streak">
+              <svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 3s4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-3s1 2 3 2c0-3-3-5 0-8z" fill="currentColor"/></svg>
+              <span><strong id="streakCount">0</strong> Wochen</span>
+            </span>
+          </header>
+          <div class="week-track" id="weekTrack"></div>
+        </article>
+
+        <!-- Booster Section -->
+        <section class="section">
+          <header class="section__head">
+            <h3 class="section__title">Sammle Eis-Punkte</h3>
+            <button class="section__more" data-go="checkin">Alle ansehen</button>
+          </header>
+          <div class="boosters" id="boostersList"></div>
+        </section>
+
+        <!-- Achievements teaser (horizontal scroll) -->
+        <section class="section">
+          <header class="section__head">
+            <h3 class="section__title">Deine Badges</h3>
+          </header>
+          <ul class="achievements" id="achievementsList"></ul>
+        </section>
       </section>
 
       <!-- CHECK-IN -->
@@ -310,6 +304,7 @@
             <h2 class="h1">Challenges</h2>
           </div>
         </header>
+        <article class="card card--community" id="communityCard" style="margin-bottom: 20px"></article>
         <div class="challenges" id="challengesList"></div>
       </section>
 
@@ -327,6 +322,12 @@
           </div>
           <div class="editor__controls" id="editorControls"></div>
         </div>
+
+        <article class="card card--evolution" style="margin-top: 20px">
+          <p class="eyebrow">Avatar-Entwicklung</p>
+          <h3 class="card__title">Frostis Reise</h3>
+          <div class="evolution-path" id="evolutionPath"></div>
+        </article>
       </section>
 
       <!-- LEADERBOARD -->
