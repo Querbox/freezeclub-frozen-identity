@@ -55,31 +55,27 @@ function completeOnboarding(){
   }, 400);
 }
 
-// Bulletproof tab navigation
+// Bulletproof tab navigation — global delegation
+var KNOWN_VIEWS = ["home","checkin","shop","profile","leaderboard"];
+function __switchView(name){
+  if(name === "editor" || name === "challenges") name = "profile";
+  if(KNOWN_VIEWS.indexOf(name) < 0) return false; // ignore unknown
+  document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("is-active", t.dataset.tab === name); });
+  document.querySelectorAll(".bnav").forEach(function(b){ b.classList.toggle("is-active", b.dataset.tab === name); });
+  document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("is-active", v.id === "view-"+name); });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  return true;
+}
 document.addEventListener("click", function(e){
   if(!e.target.closest) return;
-  // Tab buttons
   var tab = e.target.closest("[data-tab]");
   if(tab){
-    e.preventDefault();
-    var name = tab.dataset.tab;
-    if(name === "editor" || name === "challenges") name = "profile";
-    document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("is-active", t.dataset.tab === name); });
-    document.querySelectorAll(".bnav").forEach(function(b){ b.classList.toggle("is-active", b.dataset.tab === name); });
-    document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("is-active", v.id === "view-"+name); });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if(__switchView(tab.dataset.tab)) e.preventDefault();
     return;
   }
-  // data-go redirects (button links to a tab)
   var go = e.target.closest("[data-go]");
   if(go){
-    e.preventDefault();
-    var gname = go.dataset.go;
-    if(gname === "editor" || gname === "challenges") gname = "profile";
-    document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("is-active", t.dataset.tab === gname); });
-    document.querySelectorAll(".bnav").forEach(function(b){ b.classList.toggle("is-active", b.dataset.tab === gname); });
-    document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("is-active", v.id === "view-"+gname); });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if(__switchView(go.dataset.go)) e.preventDefault();
     return;
   }
 }, true);
@@ -1551,7 +1547,7 @@ function bindEvents(){
     sfx("click");
     $$("#shopToggle .shop-toggle__btn").forEach(x => x.classList.remove("is-active"));
     b.classList.add("is-active");
-    shopMode = b.dataset.tab;
+    shopMode = b.dataset.shoptab || b.dataset.tab;
     renderShop(currentFilter);
   });
 
