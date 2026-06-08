@@ -493,9 +493,14 @@ function renderAll(animate=false){
   setNum("#statTotal", state.totalPoints);
   setNum("#statVisits", state.visits);
 
-  // Quick-action subtexts with EUR anchor
-  const qaPoints = $("#qaPoints");
-  if(qaPoints) qaPoints.textContent = state.points.toLocaleString("de-DE") + " Pkt · " + pointsToEuro(state.points);
+  // BIG hero pill: euro value
+  const heroPoints = $("#heroPoints");
+  if(heroPoints) heroPoints.textContent = pointsToEuro(state.points);
+
+  // Profile view labels
+  const profileName = $("#profileName"); if(profileName) profileName.textContent = state.firstName || "Frosti";
+  const weekGoalLabel = $("#weekGoalLabel"); if(weekGoalLabel) weekGoalLabel.textContent = state.weekGoal || 2;
+  const soundLabel = $("#soundLabel"); if(soundLabel) soundLabel.textContent = state.soundOn === false ? "Stumm" : "Aktiviert";
 
   renderHomeBanners();
   renderNextReward();
@@ -520,6 +525,8 @@ function renderAll(animate=false){
 
   const currentLevel = Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
   renderAvatar($("#avatarStage"), { level: currentLevel });
+  const profEl = $("#profileAvatar");
+  if(profEl) renderAvatar(profEl, { level: currentLevel });
   renderEvolutionPath(currentLevel);
   renderCommunityChallenge();
   renderAvatarMeta();
@@ -1209,6 +1216,8 @@ function fpBurst(el, text){
 
 /* ---------- Tabs ---------- */
 function showTab(name){
+  // Backwards-compat: legacy tabs map onto new structure
+  if(name === "editor" || name === "challenges") name = "profile";
   sfx("click");
   $$(".tab").forEach(t => t.classList.toggle("is-active", t.dataset.tab === name));
   $$(".bnav").forEach(b => b.classList.toggle("is-active", b.dataset.tab === name));
@@ -1343,14 +1352,23 @@ function bindEvents(){
   $("#modalClose").addEventListener("click", () => { sfx("click"); hideModal(); });
   $("#modal").addEventListener("click", (e) => { if(e.target.id === "modal") hideModal(); });
 
-  $("#soundBtn").addEventListener("click", () => {
+  $("#soundBtn")?.addEventListener("click", () => {
     state.soundOn = !state.soundOn;
     save();
-    $("#soundBtn").classList.toggle("is-muted", !state.soundOn);
     if(state.soundOn) sfx("click");
+    renderAll();
   });
 
-  $("#resetBtn").addEventListener("click", () => {
+  $("#weekGoalBtn")?.addEventListener("click", () => {
+    const next = ((state.weekGoal || 2) % 4) + 1;
+    state.weekGoal = next;
+    save();
+    sfx("click");
+    toast(`Wochenziel: ${next}× pro Woche`);
+    renderAll();
+  });
+
+  $("#resetBtn")?.addEventListener("click", () => {
     if(!confirm("Wirklich zurücksetzen? Alle Punkte und Items gehen verloren.")) return;
     localStorage.removeItem(STORAGE_KEY);
     location.reload();

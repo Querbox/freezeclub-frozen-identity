@@ -591,11 +591,18 @@ body::before{
   .part-row__value{ font-size: 16px }
   .nav-btn{ width: 38px; height: 38px }
 
-  /* Hero on mobile */
-  .hero-frosti{ padding: 16px; grid-template-columns: minmax(110px,1fr) 1.4fr; gap: 12px; margin-bottom: 16px }
-  .hero-frosti__name{ font-size: 22px }
-  .hero-frosti__rank{ font-size: 10px }
-  .hero-frosti__cta{ padding: 9px 12px; font-size: 12px; margin-top: 8px }
+  /* Big hero on mobile */
+  .hero-big{ grid-template-columns: 1.3fr 1fr; gap: 10px; margin-bottom: 14px }
+  .hero-big__avatar{ border-radius: 20px }
+  .hero-pill{ padding: 10px 12px; border-radius: 14px; min-height: 0; gap: 6px }
+  .hero-pill__rank, .hero-pill__label{ font-size: 12px }
+  .hero-pill__value{ font-size: 13px }
+  .hero-pill__icons{ font-size: 16px }
+  .hero-level{ padding: 12px 14px; margin-bottom: 16px }
+
+  .card--profile-hero{ padding: 16px; gap: 12px }
+  .avatar-stage--mini{ width: 80px; height: 80px }
+  .profile-stat__num{ font-size: 18px }
 
   /* Quick actions */
   .quick-actions{ gap: 6px; margin-bottom: 16px }
@@ -818,10 +825,13 @@ body::before{
   object-fit: contain;
   object-position: bottom center;
   display: block;
+  position: relative;
+  z-index: 1;
   pointer-events: none;
   -webkit-user-select: none; user-select: none;
   -webkit-user-drag: none;
 }
+.frosti-accessory{ z-index: 10 }
 
 @keyframes bounce{
   0%,100%{ transform: translateY(0) scale(1) }
@@ -1525,6 +1535,181 @@ body::before{
 }
 .goal-tile__label{ font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: -.005em }
 .goal-tile__hint{ font-size: 11px; color: var(--ink-3); margin-top: 2px }
+
+/* ===== BIG HERO (Avatar foreground) ===== */
+.hero-big{
+  background: transparent;
+  border: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+  margin: 0 0 18px;
+  position: relative;
+}
+.hero-big__avatar{
+  aspect-ratio: 1/1 !important;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 80%, rgba(31,61,46,.10), transparent 65%),
+    var(--surface);
+  border-radius: 24px;
+  position: relative; overflow: hidden;
+  margin: 0;
+  border: 1px solid var(--line);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.hero-big__avatar .avatar-stage__avatar{
+  width: 90%; max-height: 95%;
+}
+.hero-big__avatar::before, .hero-big__avatar::after{ display: none }
+
+.hero-big__pills{
+  display: flex; flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+.hero-pill{
+  appearance: none; cursor: pointer; font: inherit;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  text-align: left;
+  transition: all .2s ease;
+  flex: 1;
+  min-height: 56px;
+}
+.hero-pill:hover{ border-color: var(--brand); transform: translateY(-1px) }
+.hero-pill__rank,
+.hero-pill__label{
+  font-weight: 700; font-size: 13px;
+  color: var(--ink); letter-spacing: -.01em;
+  line-height: 1.15;
+}
+.hero-pill__value{
+  font-weight: 700; font-size: 15px; color: var(--brand);
+  letter-spacing: -.015em;
+}
+.hero-pill__icons{
+  font-size: 18px; line-height: 1;
+}
+
+/* Level bar below hero */
+.hero-level{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+.hero-level__row{
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px;
+}
+.hero-level__num{
+  font-size: 14px; font-weight: 700; color: var(--brand);
+  letter-spacing: -.005em;
+}
+.hero-level__num strong{ color: var(--ink); font-weight: 700 }
+.hero-level__xp{
+  font-size: 12px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.hero-level__bar{
+  height: 6px; border-radius: 3px;
+  background: var(--surface-2); overflow: hidden;
+}
+.hero-level__fill{
+  height: 100%; width: 0%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--brand), #4d8568);
+  transition: width 1s cubic-bezier(.2,.7,.2,1);
+}
+
+/* ===== PROFILE PAGE ===== */
+.card--profile-hero{
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.avatar-stage--mini{
+  width: 90px; height: 90px;
+  flex-shrink: 0;
+  aspect-ratio: 1/1 !important;
+  border-radius: 18px;
+  background: var(--surface-2) !important;
+  border: 1px solid var(--line);
+}
+.avatar-stage--mini .avatar-stage__avatar{
+  width: 90%; max-height: 90%;
+}
+.avatar-stage--mini::before, .avatar-stage--mini::after{ display: none }
+.profile-stats{
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  flex: 1; gap: 8px;
+}
+.profile-stat{
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+}
+.profile-stat__num{
+  font-weight: 700; font-size: 20px; color: var(--ink);
+  letter-spacing: -.02em; line-height: 1;
+}
+.profile-stat__label{
+  font-size: 10px; color: var(--ink-3);
+  margin-top: 4px; letter-spacing: -.005em;
+}
+
+.settings-list{
+  display: flex; flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.setting-row{
+  appearance: none; cursor: pointer; font: inherit;
+  background: transparent; border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  text-align: left;
+  transition: background .2s ease;
+}
+.setting-row:last-child{ border-bottom: 0 }
+.setting-row:hover{ background: var(--surface-2) }
+.setting-row__icon{
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--brand-soft);
+  display: grid; place-items: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.setting-row__meta{ flex: 1 }
+.setting-row__name{
+  display: block;
+  font-weight: 600; font-size: 14px; color: var(--ink);
+  letter-spacing: -.005em;
+}
+.setting-row__sub{
+  display: block;
+  font-size: 12px; color: var(--ink-3);
+  margin-top: 2px;
+}
+.setting-row__chev{
+  font-size: 22px; color: var(--ink-3); font-weight: 300;
+}
+.setting-row--danger .setting-row__icon{
+  background: rgba(196,107,74,.12); color: var(--warn);
+}
+.setting-row--danger .setting-row__name{ color: var(--warn) }
+
+/* Hide old topbar refs that may remain */
+.topbar, .topbar__tabs, .topbar__user{ display: none !important }
+
+/* Tighten main top spacing since topbar is gone */
+.main{ padding-top: calc(env(safe-area-inset-top) + 16px) }
 
 /* ===== HOME — Simplified hero & quick actions ===== */
 .hero-frosti{

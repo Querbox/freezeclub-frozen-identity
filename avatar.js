@@ -248,18 +248,19 @@ function accessoryOverlay(accId){
   if(!accId) return "";
   const acc = ACCESSORIES[accId];
   if(!acc) return "";
-  // Position config per slot (in HTML overlay coordinates)
+  // Positions are relative to the avatar container (.avatar-stage__avatar).
+  // Frosti is bottom-anchored (object-position: bottom) — head sits near top.
   const slotConfig = {
-    head:  { top: "-12%",  left: "50%",  transform: "translateX(-50%)",  size: "56px" },
-    eyes:  { top: "42%",  left: "50%",  transform: "translateX(-50%)",  size: "44px" },
-    neck:  { top: "70%",  left: "50%",  transform: "translateX(-50%)",  size: "42px" },
+    head:  { top: "4%",  width: "55%", size: "60px" },
+    eyes:  { top: "44%", width: "52%", size: "44px" },
+    neck:  { top: "72%", width: "48%", size: "44px" },
   };
   const pos = slotConfig[acc.slot] || slotConfig.head;
   if(acc.url){
-    return `<img class="frosti-accessory" src="${acc.url}" alt="" style="position:absolute;top:${pos.top};left:${pos.left};transform:${pos.transform};width:${pos.size};height:auto;z-index:5;pointer-events:none;"/>`;
+    return `<img class="frosti-accessory" src="${acc.url}" alt="" style="position:absolute;top:${pos.top};left:50%;transform:translateX(-50%);width:${pos.width};height:auto;z-index:10;pointer-events:none;"/>`;
   }
   // emoji fallback
-  return `<div class="frosti-accessory" style="position:absolute;top:${pos.top};left:${pos.left};transform:${pos.transform};font-size:${pos.size};line-height:1;z-index:5;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.18));">${acc.glyph || ""}</div>`;
+  return `<div class="frosti-accessory" style="position:absolute;top:${pos.top};left:50%;transform:translateX(-50%);font-size:${pos.size};line-height:1;z-index:10;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.2));">${acc.glyph || ""}</div>`;
 }
 
 /* ---- Background renderer (CSS for stage) ---- */
@@ -320,69 +321,47 @@ function composeAvatarSVG(presetId, opts){
   </svg>`;
 }
 
-/* ---- Image-first rendering with SVG fallback ---- */
+/* ---- Image-direct rendering (browser handles caching) ---- */
 const AVATAR_IMAGE_BASE = "./assets/avatars/";
-const _imgCache = new Map();
 
 function avatarImagePath(presetId, level){
   return `${AVATAR_IMAGE_BASE}${presetId}-${level}.png`;
 }
 
-function _tryLoadImage(url){
-  if(_imgCache.has(url)) return Promise.resolve(_imgCache.get(url));
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => { _imgCache.set(url, url); resolve(url); };
-    img.onerror = () => { _imgCache.set(url, null); resolve(null); };
-    img.src = url;
-  });
-}
+/* Global error handler so onerror in HTML can reach it */
+window._frostiImgError = function(img){
+  const fallback = img.getAttribute("data-fallback");
+  if(fallback && img.src.indexOf(fallback.split("/").pop()) === -1){
+    img.src = fallback;
+    img.removeAttribute("data-fallback");
+    return;
+  }
+  // No more fallbacks — hide image, the avatar-stage shows background instead
+  img.style.opacity = "0";
+};
 
-/* ---- Render avatar into target ----
-   Strategy:
-   1. Render SVG immediately (no flicker)
-   2. Try to load PNG at /assets/avatars/{preset}-{level}.png
-   3. If PNG exists, swap SVG for image
-   4. If PNG missing, try {preset}-1.png as fallback
-   5. If neither exists, keep SVG */
+/* ---- Render avatar (img direct + accessory overlay) ---- */
 function renderAvatarV2(target, avatar, opts){
   if(!target || !avatar) return;
   const presetId = avatar.preset || "frost";
   const accessoryId = avatar.accessory || (opts && opts.accessory);
-  const level = (opts && opts.level) || 1;
+  const level = Math.max(1, Math.min(5, (opts && opts.level) || 1));
 
   if(target.style){
     target.style.position = target.style.position || "relative";
   }
 
-  // 1) Render SVG instantly for immediate feedback
+  const url = avatarImagePath(presetId, level);
+  const fallbackUrl = avatarImagePath(presetId, 1);
+  const needsFallback = url !== fallbackUrl;
+
+  // Browser-level caching = instant on revisit, no flicker
   target.innerHTML =
-    composeAvatarSVG(presetId, opts) +
-    accessoryOverlay(accessoryId);
-
-  // 2) Try to upgrade to PNG (level-specific → base → keep SVG)
-  const levelUrl = avatarImagePath(presetId, level);
-  const baseUrl = avatarImagePath(presetId, 1);
-
-  _tryLoadImage(levelUrl).then(found => {
-    if(found){
-      _swapToImage(target, found, accessoryId, presetId, level);
-      return;
-    }
-    if(levelUrl !== baseUrl){
-      _tryLoadImage(baseUrl).then(baseFound => {
-        if(baseFound) _swapToImage(target, baseFound, accessoryId, presetId, 1);
-      });
-    }
-  });
-}
-
-function _swapToImage(target, url, accessoryId, presetId, level){
-  // Guard: if user navigated/re-rendered in the meantime, don't overwrite
-  // (we mark the target with the rendered key)
-  const key = `${presetId}-${level}`;
-  target.innerHTML =
-    `<img src="${url}" alt="Frosti ${presetId} Level ${level}" class="frosti-img" draggable="false" data-key="${key}">`
+    `<img class="frosti-img" alt="Frosti ${presetId} Lvl ${level}" draggable="false"
+          src="${url}"
+          ${needsFallback ? `data-fallback="${fallbackUrl}"` : ''}
+          onerror="window._frostiImgError && window._frostiImgError(this)"
+          data-preset="${presetId}" data-level="${level}">`
     + accessoryOverlay(accessoryId);
 }
 
