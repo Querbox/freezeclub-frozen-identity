@@ -320,18 +320,70 @@ function composeAvatarSVG(presetId, opts){
   </svg>`;
 }
 
-/* ---- Render avatar into target (handles SVG + accessory overlay) ---- */
+/* ---- Image-first rendering with SVG fallback ---- */
+const AVATAR_IMAGE_BASE = "./assets/avatars/";
+const _imgCache = new Map();
+
+function avatarImagePath(presetId, level){
+  return `${AVATAR_IMAGE_BASE}${presetId}-${level}.png`;
+}
+
+function _tryLoadImage(url){
+  if(_imgCache.has(url)) return Promise.resolve(_imgCache.get(url));
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => { _imgCache.set(url, url); resolve(url); };
+    img.onerror = () => { _imgCache.set(url, null); resolve(null); };
+    img.src = url;
+  });
+}
+
+/* ---- Render avatar into target ----
+   Strategy:
+   1. Render SVG immediately (no flicker)
+   2. Try to load PNG at /assets/avatars/{preset}-{level}.png
+   3. If PNG exists, swap SVG for image
+   4. If PNG missing, try {preset}-1.png as fallback
+   5. If neither exists, keep SVG */
 function renderAvatarV2(target, avatar, opts){
   if(!target || !avatar) return;
   const presetId = avatar.preset || "frost";
   const accessoryId = avatar.accessory || (opts && opts.accessory);
-  // ensure target is positioned so absolute overlays anchor correctly
+  const level = (opts && opts.level) || 1;
+
   if(target.style){
     target.style.position = target.style.position || "relative";
   }
+
+  // 1) Render SVG instantly for immediate feedback
   target.innerHTML =
     composeAvatarSVG(presetId, opts) +
     accessoryOverlay(accessoryId);
+
+  // 2) Try to upgrade to PNG (level-specific → base → keep SVG)
+  const levelUrl = avatarImagePath(presetId, level);
+  const baseUrl = avatarImagePath(presetId, 1);
+
+  _tryLoadImage(levelUrl).then(found => {
+    if(found){
+      _swapToImage(target, found, accessoryId, presetId, level);
+      return;
+    }
+    if(levelUrl !== baseUrl){
+      _tryLoadImage(baseUrl).then(baseFound => {
+        if(baseFound) _swapToImage(target, baseFound, accessoryId, presetId, 1);
+      });
+    }
+  });
+}
+
+function _swapToImage(target, url, accessoryId, presetId, level){
+  // Guard: if user navigated/re-rendered in the meantime, don't overwrite
+  // (we mark the target with the rendered key)
+  const key = `${presetId}-${level}`;
+  target.innerHTML =
+    `<img src="${url}" alt="Frosti ${presetId} Level ${level}" class="frosti-img" draggable="false" data-key="${key}">`
+    + accessoryOverlay(accessoryId);
 }
 
 /* ---- Apply background to the avatar-stage element ---- */
