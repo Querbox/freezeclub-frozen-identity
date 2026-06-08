@@ -1,5 +1,96 @@
-/* Freezeclub — Frozen Identity v0.2
+/* Freezeclub — Frozen Identity v3.x
    Premium Game UI: animations, level-up, loot reveal, sound, particles */
+
+// ============================================================
+// Bulletproof onboarding event handlers (module-load delegation)
+// Attached BEFORE anything else so even if other code fails, clicks work.
+// ============================================================
+var __onbSlide = 0;
+var __onbTotal = 5;
+
+function __onbGoTo(idx){
+  idx = Math.max(0, Math.min(__onbTotal - 1, idx));
+  __onbSlide = idx;
+  document.querySelectorAll(".onb-slide, .slide").forEach(function(s){
+    s.classList.toggle("is-active", parseInt(s.dataset.step, 10) === idx);
+  });
+  document.querySelectorAll(".onb-dots .dot, .onboarding__dots .dot").forEach(function(d, i){
+    d.classList.toggle("is-active", i === idx);
+  });
+  var back = document.getElementById("onboardingBack");
+  if(back) back.disabled = idx === 0;
+  var next = document.getElementById("onboardingNext");
+  if(next) next.textContent = idx === __onbTotal - 1 ? "Frosti aufwecken" : "Weiter";
+  var deck = document.getElementById("onboardingDeck");
+  if(deck) deck.scrollTop = 0;
+}
+
+function completeOnboarding(){
+  var firstEl = document.getElementById("firstName");
+  var firstName = (firstEl ? firstEl.value : "").trim();
+  if(!firstName){
+    __onbGoTo(__onbTotal - 1);
+    setTimeout(function(){ firstEl && firstEl.focus(); }, 100);
+    return;
+  }
+  if(typeof state === "undefined") return;
+  state.firstName = firstName;
+  var goalEl = document.getElementById("goal");
+  state.goal = goalEl ? goalEl.value : "recovery";
+  var chosenGoalEl = document.querySelector(".onb-goal.is-selected, .goal-tile.is-selected");
+  if(chosenGoalEl){
+    state.weekGoal = parseInt(chosenGoalEl.dataset.weekgoal, 10) || 2;
+    state.weekGoalChosen = true;
+  }
+  state.onboarded = true;
+  state.avatar = (window.defaultAvatar ? window.defaultAvatar() : { preset: "frost", accessory: null, background: null });
+  state.points = 200; state.totalPoints = 200; state.seasonPoints = 200;
+  if(typeof save === "function") save();
+  if(typeof ensureAudio === "function") ensureAudio();
+  if(typeof sfx === "function") sfx("levelup");
+  if(typeof enterApp === "function") enterApp();
+  setTimeout(function(){
+    if(typeof confetti === "function") confetti();
+    if(typeof showModal === "function") showModal({ eyebrow: "Willkommen", title: "+200 Eis-Punkte", desc: "Frosti ist erwacht. Starte deinen ersten Check-in.", art: "❄" });
+  }, 400);
+}
+
+document.addEventListener("click", function(e){
+  // Next button
+  if(e.target.closest && e.target.closest("#onboardingNext")){
+    e.preventDefault();
+    if(__onbSlide === __onbTotal - 1){
+      var form = document.getElementById("onboardingForm");
+      if(form && form.checkValidity()) completeOnboarding();
+      else if(form) form.reportValidity();
+      else completeOnboarding();
+    } else {
+      __onbGoTo(__onbSlide + 1);
+    }
+    return;
+  }
+  if(e.target.closest && e.target.closest("#onboardingBack")){
+    e.preventDefault();
+    __onbGoTo(__onbSlide - 1);
+    return;
+  }
+  if(e.target.closest && e.target.closest("#onboardingSkip")){
+    e.preventDefault();
+    __onbGoTo(__onbTotal - 1);
+    return;
+  }
+  // Goal tile selection
+  var goal = e.target.closest && e.target.closest("[data-weekgoal]");
+  if(goal){
+    document.querySelectorAll(".onb-goal, .goal-tile").forEach(function(g){ g.classList.remove("is-selected"); });
+    goal.classList.add("is-selected");
+  }
+}, true); // capture phase for highest priority
+
+window.addEventListener("error", function(e){
+  console.error("[Freezeclub error]", e.message, "at", e.filename + ":" + e.lineno);
+});
+// ============================================================
 
 const STORAGE_KEY = "freezeclub.v2";
 const SEASON = { id: "S01", name: "Winter Cryo", daysLeft: 47 };
@@ -1227,73 +1318,8 @@ function showTab(name){
 
 /* ---------- Events ---------- */
 function bindEvents(){
-  // ===== Onboarding slide navigation =====
-  let currentSlide = 0;
-  const totalSlides = 5;
-
-  // Goal-tile selection inside slide 4 (new + legacy classes)
-  document.addEventListener("click", (e) => {
-    const goal = e.target.closest("[data-weekgoal]");
-    if(!goal) return;
-    $$(".onb-goal, .goal-tile").forEach(g => g.classList.remove("is-selected"));
-    goal.classList.add("is-selected");
-    sfx("click");
-  });
-
-  function goToSlide(idx){
-    idx = Math.max(0, Math.min(totalSlides - 1, idx));
-    currentSlide = idx;
-    $$(".onb-slide, .slide").forEach(s => s.classList.toggle("is-active", parseInt(s.dataset.step, 10) === idx));
-    $$(".onb-dots .dot, .onboarding__dots .dot").forEach((d, i) => d.classList.toggle("is-active", i === idx));
-    const back = $("#onboardingBack"); if(back) back.disabled = idx === 0;
-    const next = $("#onboardingNext"); if(next){
-      next.textContent = idx === totalSlides - 1 ? "Frosti aufwecken" : "Weiter";
-    }
-    // scroll deck back to top on slide change
-    const deck = $("#onboardingDeck"); if(deck) deck.scrollTop = 0;
-    sfx("click");
-  }
-
-  function completeOnboarding(){
-    const firstName = ($("#firstName").value || "").trim();
-    if(!firstName){
-      goToSlide(totalSlides - 1);
-      setTimeout(() => $("#firstName").focus(), 100);
-      return;
-    }
-    state.firstName = firstName;
-    state.goal = $("#goal").value;
-    // Pick chosen week goal (default 2) — new + legacy classes
-    const chosenGoalEl = document.querySelector(".onb-goal.is-selected, .goal-tile.is-selected");
-    if(chosenGoalEl){
-      state.weekGoal = parseInt(chosenGoalEl.dataset.weekgoal, 10) || 2;
-      state.weekGoalChosen = true;
-    }
-    state.onboarded = true;
-    state.avatar = window.defaultAvatar();
-    state.points = 200; state.totalPoints = 200; state.seasonPoints = 200;
-    save();
-    ensureAudio();
-    sfx("levelup");
-    enterApp();
-    setTimeout(() => {
-      confetti();
-      showModal({ eyebrow: "Willkommen", title: "+200 Eis-Punkte", desc: "Frosti ist erwacht. Starte deinen ersten Check-in.", art: "❄" });
-    }, 400);
-  }
-
-  $("#onboardingNext")?.addEventListener("click", () => {
-    if(currentSlide === totalSlides - 1){
-      const form = $("#onboardingForm");
-      if(form.checkValidity()) completeOnboarding();
-      else form.reportValidity();
-    } else {
-      goToSlide(currentSlide + 1);
-    }
-  });
-  $("#onboardingBack")?.addEventListener("click", () => goToSlide(currentSlide - 1));
-  $("#onboardingSkip")?.addEventListener("click", () => goToSlide(totalSlides - 1));
-
+  // Onboarding nav handled by GLOBAL delegation (see below bindEvents).
+  // Form submit binding remains here for redundancy.
   $("#onboardingForm")?.addEventListener("submit", e => {
     e.preventDefault();
     completeOnboarding();
@@ -1494,9 +1520,25 @@ function boot(){
     state.weekKey = currentWeek;
     save();
   }
-  const onbAv = $("#onboardingAvatar");
-  if(onbAv) window.renderAvatarV2(onbAv, state.avatar, { level: 1 });
+  // Fallback: always show a Frosti image in onboarding even if renderAvatarV2 unavailable
+  var onbAv = document.getElementById("onboardingAvatar");
+  if(onbAv){
+    try{
+      if(window.renderAvatarV2 && state.avatar){
+        window.renderAvatarV2(onbAv, state.avatar, { level: 1 });
+      } else {
+        onbAv.innerHTML = '<img class="frosti-img" src="./assets/avatars/frost-1.png?v=v3.5" alt="Frosti" draggable="false" style="width:100%;height:100%;object-fit:contain">';
+      }
+    } catch(err){
+      onbAv.innerHTML = '<img class="frosti-img" src="./assets/avatars/frost-1.png?v=v3.5" alt="Frosti" draggable="false" style="width:100%;height:100%;object-fit:contain">';
+    }
+  }
   if(state.onboarded) enterApp();
 }
 
-document.addEventListener("DOMContentLoaded", boot);
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  // DOM already parsed (script was loaded after) — run immediately
+  boot();
+}
