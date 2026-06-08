@@ -188,43 +188,66 @@
       <!-- Hidden refs for legacy code paths -->
       <span id="topPoints" hidden>0</span>
 
-      <!-- HOME (mobile-first, simplified) -->
+      <!-- HOME (card-list, sage-green hero) -->
       <section class="view is-active" id="view-home">
-        <!-- Comeback Banner (only if inactive >14d) -->
-        <article class="banner banner--comeback hidden" id="comebackBanner"></article>
+        <!-- Top header bar -->
+        <header class="top-header">
+          <button class="top-header__avatar" data-go="profile" aria-label="Profil">
+            <div class="top-header__avatar-frosti" id="topHeaderAvatar"></div>
+          </button>
+          <div class="top-header__date">
+            <button class="top-header__chev" aria-label="Vorheriger Tag">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <span class="top-header__date-label">Heute</span>
+            <button class="top-header__chev" aria-label="Nächster Tag">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <button class="top-header__bell" aria-label="Benachrichtigungen">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9zM9 21a3 3 0 0 0 6 0" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </header>
 
-        <!-- Off-Peak Banner (only during off-peak hours) -->
+        <!-- Comeback Banner -->
+        <article class="banner banner--comeback hidden" id="comebackBanner"></article>
+        <!-- Off-Peak Banner -->
         <article class="banner banner--offpeak hidden" id="offpeakBanner"></article>
 
-        <!-- BIG HERO — Avatar prominent + pills on the side -->
-        <article class="hero-big">
-          <div class="hero-big__avatar avatar-stage">
+        <!-- Week strip -->
+        <div class="week-strip" id="weekStrip"></div>
+
+        <!-- Big Frosti Hero -->
+        <article class="frosti-hero">
+          <div class="frosti-hero__stage avatar-stage">
             <div class="avatar-stage__avatar" id="avatarStage"></div>
           </div>
-          <div class="hero-big__pills">
-            <button class="hero-pill" data-go="leaderboard">
-              <span class="hero-pill__rank" id="rankLabel">Frostknospe</span>
-              <span class="hero-pill__icons">🏆</span>
-            </button>
-            <button class="hero-pill" data-go="shop">
-              <span class="hero-pill__label">Shop</span>
-              <span class="hero-pill__value" id="heroPoints">0 €</span>
-            </button>
-            <button class="hero-pill" data-go="shop">
-              <span class="hero-pill__label">Belohnung</span>
-              <span class="hero-pill__icons">🎁</span>
-            </button>
+          <div class="frosti-hero__meta">
+            <span class="frosti-hero__rank" id="rankLabel">Frostknospe</span>
+            <h2 class="frosti-hero__name" id="avatarName">Frosti</h2>
+            <div class="frosti-hero__level">
+              <span>Level <strong id="levelNum">1</strong></span>
+              <span class="dim"><span id="seasonPoints">0</span> / <span id="seasonGoal">500</span></span>
+            </div>
+            <div class="frosti-hero__bar"><div class="frosti-hero__fill" id="levelFill"></div></div>
           </div>
         </article>
 
-        <!-- Level bar full width below hero -->
-        <div class="hero-level">
-          <div class="hero-level__row">
-            <span class="hero-level__num">Level <strong id="levelNum">1</strong></span>
-            <span class="hero-level__xp"><span id="seasonPoints">0</span> / <span id="seasonGoal">500</span> XP</span>
-          </div>
-          <div class="hero-level__bar"><div class="hero-level__fill" id="levelFill"></div></div>
-        </div>
+        <!-- Sage-green streak hero card -->
+        <article class="streak-hero" id="streakHero"></article>
+
+        <!-- Today's entries section (card list) -->
+        <section class="entries">
+          <header class="entries__head">
+            <h3 class="entries__title">Heute</h3>
+            <button class="entries__more" data-go="checkin">Alle ansehen <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8l4 4-4 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </header>
+          <div class="entries__list" id="entriesList"></div>
+          <button class="add-entry" data-go="checkin">
+            <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="11" fill="#1f3d2e"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>Jetzt einchecken</span>
+          </button>
+        </section>
 
         <!-- Next Reward Progress -->
         <article class="card card--reward-progress" id="nextRewardCard"></article>
@@ -418,23 +441,23 @@
       </section>
     </main>
 
-    <!-- Mobile bottom tab bar — 4 tabs -->
+    <!-- Glassmorphic bottom nav with center orb -->
     <nav class="bottom-nav hidden" id="bottomNav" aria-label="Navigation">
-      <button class="bnav is-active" data-tab="home">
-        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
-        <span>Start</span>
+      <button class="bnav is-active" data-tab="home" aria-label="Start">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
       </button>
-      <button class="bnav" data-tab="checkin">
-        <svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7" fill="none"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.7"/><line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-        <span>Termine</span>
+      <button class="bnav" data-tab="checkin" aria-label="Termine">
+        <svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7" fill="none"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.7"/><line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </button>
-      <button class="bnav" data-tab="shop">
-        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M5 8h14l-1 12H6L5 8zM8 8V5a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
-        <span>Shop</span>
+      <button class="bnav bnav--orb" data-tab="checkin" aria-label="Einchecken">
+        <span class="bnav__orb-inner"></span>
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
       </button>
-      <button class="bnav" data-tab="profile">
-        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="9" r="4" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
-        <span>Profil</span>
+      <button class="bnav" data-tab="shop" aria-label="Shop">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 8h14l-1 12H6L5 8zM8 8V5a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="bnav" data-tab="profile" aria-label="Profil">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="9" r="4" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
       </button>
     </nav>
 

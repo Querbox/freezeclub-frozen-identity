@@ -992,7 +992,23 @@ body::before{
   .part-row__value{ font-size: 16px }
   .nav-btn{ width: 38px; height: 38px }
 
-  /* Big hero on mobile */
+  /* New hero on mobile */
+  .frosti-hero{ padding: 14px; gap: 12px; border-radius: 18px }
+  .frosti-hero__name{ font-size: 20px }
+  .streak-hero{ padding: 18px; border-radius: 18px; gap: 14px }
+  .streak-hero__ring{ width: 64px; height: 64px }
+  .streak-hero__ring-text{ font-size: 18px }
+  .streak-hero__title{ font-size: 15px }
+  .week-strip{ gap: 4px; margin-bottom: 16px }
+  .wk-strip-day{ padding: 8px 2px; border-radius: 12px; gap: 6px }
+  .wk-strip-day__icon{ width: 24px; height: 24px; font-size: 11px }
+  .wk-strip-day__label{ font-size: 10px }
+  .top-header{ padding: 0 0 14px }
+  .top-header__avatar, .top-header__bell{ width: 36px; height: 36px }
+  .entries__list{ padding: 14px; border-radius: 18px }
+  .add-entry{ padding: 13px 18px; font-size: 13px }
+
+  /* Big hero on mobile (legacy) */
   .hero-big{ grid-template-columns: 1.3fr 1fr; gap: 10px; margin-bottom: 14px }
   .hero-big__avatar{ border-radius: 20px }
   .hero-pill{ padding: 10px 12px; border-radius: 14px; min-height: 0; gap: 6px }
@@ -1085,43 +1101,64 @@ body::before{
 }
 
 /* ===== BOTTOM NAV (Mobile) ===== */
+/* Glassmorphic floating pill nav with center orb */
 .bottom-nav{
   display: none;
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-  padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,.94);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
-  border-top: 1px solid var(--line);
-  justify-content: space-around;
-  align-items: stretch;
+  position: fixed;
+  left: 50%; bottom: calc(env(safe-area-inset-bottom) + 14px);
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 8px 14px;
+  background: rgba(255,255,255,.65);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 999px;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  box-shadow:
+    0 12px 32px rgba(20,40,30,.18),
+    0 1px 0 rgba(255,255,255,.6) inset;
 }
 .bnav{
   appearance: none; border: 0; background: transparent;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  padding: 10px 6px 6px; min-width: 56px; min-height: 56px;
-  cursor: pointer; color: var(--ink-3);
-  font-size: 10px; font-weight: 500;
-  letter-spacing: .02em;
-  transition: color .2s ease;
-  border-radius: 0;
+  display: grid; place-items: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  cursor: pointer; color: var(--ink-2);
+  font-size: 0;
+  transition: color .2s ease, background .2s ease;
   position: relative;
 }
-.bnav svg{ stroke-width: 1.5 }
+.bnav svg{ stroke-width: 1.7 }
+.bnav:hover{ background: rgba(31,61,46,.06); color: var(--ink) }
 .bnav.is-active{ color: var(--brand) }
 .bnav.is-active::before{
-  content:""; position: absolute; top: 0;
-  width: 18px; height: 2px; background: var(--brand); border-radius: 1px;
+  content:""; position: absolute; bottom: -4px;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--brand);
 }
-/* Drop the orb gimmick — center tab is a regular tab now */
-.bnav--center{ position: static; margin-top: 0 }
-.bnav__orb{
-  width: 22px; height: 22px;
-  background: transparent; color: inherit;
-  font-size: 18px; font-weight: 400;
-  display: grid; place-items: center;
-  border: 0; box-shadow: none; margin: 0;
-  border-radius: 0;
+
+/* Center orb (big green action) */
+.bnav--orb{
+  width: 56px; height: 56px;
+  background: radial-gradient(circle at 35% 30%, #b6f08c 0%, #5bc83c 60%, #3a9a25 100%);
+  color: #fff;
+  margin: 0 6px;
+  box-shadow:
+    0 8px 20px rgba(91,200,60,.45),
+    0 0 0 4px rgba(255,255,255,.4),
+    inset 0 -3px 6px rgba(0,0,0,.12),
+    inset 0 3px 4px rgba(255,255,255,.55);
+  position: relative;
+}
+.bnav--orb svg{ position: relative; z-index: 2 }
+.bnav--orb.is-active::before{ display: none }
+.bnav--orb:hover{ background: radial-gradient(circle at 35% 30%, #c6ffa0 0%, #6cd84d 60%, #46aa30 100%) }
+.bnav__orb-inner{
+  position: absolute; inset: 6px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.45), transparent 50%);
+  pointer-events: none;
 }
 
 /* ===== CARDS ===== */
@@ -1936,6 +1973,317 @@ body::before{
 }
 .goal-tile__label{ font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: -.005em }
 .goal-tile__hint{ font-size: 11px; color: var(--ink-3); margin-top: 2px }
+
+/* ===== TOP HEADER (avatar + date + bell) ===== */
+.top-header{
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0 14px;
+  margin-bottom: 4px;
+}
+.top-header__avatar{
+  appearance: none; border: 0; cursor: pointer;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface);
+  display: grid; place-items: center; overflow: hidden;
+  padding: 0;
+  box-shadow: 0 1px 2px rgba(20,40,30,.06);
+}
+.top-header__avatar-frosti{
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; padding: 2px;
+}
+.top-header__avatar-frosti img,
+.top-header__avatar-frosti .frosti-img{
+  width: 100%; height: 100%; object-fit: contain;
+  object-position: center;
+}
+.top-header__date{
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface);
+  padding: 6px 6px;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(20,40,30,.06);
+}
+.top-header__date-label{
+  font-weight: 700; font-size: 15px; color: var(--ink);
+  padding: 0 8px;
+  letter-spacing: -.015em;
+}
+.top-header__chev{
+  appearance: none; border: 0; background: transparent;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center;
+  cursor: pointer; color: var(--ink);
+  transition: background .2s ease;
+}
+.top-header__chev:hover{ background: var(--surface-2) }
+.top-header__bell{
+  appearance: none; border: 0; cursor: pointer;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface);
+  display: grid; place-items: center; color: var(--ink);
+  box-shadow: 0 1px 2px rgba(20,40,30,.06);
+  position: relative;
+}
+.top-header__bell::after{
+  content: ""; position: absolute; top: 9px; right: 11px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #ff5d4a; border: 1.5px solid var(--surface);
+}
+
+/* ===== WEEK STRIP ===== */
+.week-strip{
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 6px; margin-bottom: 18px;
+}
+.wk-strip-day{
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 10px 4px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+.wk-strip-day__label{
+  font-size: 11px; font-weight: 600; color: var(--ink-2);
+  letter-spacing: -.005em;
+}
+.wk-strip-day__icon{
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  color: var(--ink-3); font-size: 12px;
+}
+.wk-strip-day.is-done .wk-strip-day__icon{
+  background: #ffd76b; color: #735300;
+}
+.wk-strip-day.is-today{
+  border-color: var(--brand);
+}
+.wk-strip-day.is-today .wk-strip-day__icon{
+  background: linear-gradient(135deg, #a3d977, #6bbd44);
+  color: #fff;
+}
+.wk-strip-day.is-closed{ opacity: .55 }
+.wk-strip-day__label--today{ color: var(--brand); font-weight: 700 }
+
+/* ===== STREAK HERO CARD (sage green) ===== */
+.streak-hero{
+  background: linear-gradient(135deg, #e9f5d6 0%, #d3eaad 100%);
+  border-radius: 22px;
+  padding: 22px;
+  display: flex; align-items: center; gap: 18px;
+  margin-bottom: 22px;
+  border: 1px solid rgba(31,61,46,.08);
+  position: relative; overflow: hidden;
+}
+.streak-hero__ring{
+  position: relative;
+  width: 76px; height: 76px;
+  flex-shrink: 0;
+}
+.streak-hero__ring svg{
+  position: absolute; inset: 0;
+  transform: rotate(-90deg);
+}
+.streak-hero__ring-bg{ stroke: rgba(31,61,46,.12); fill: none }
+.streak-hero__ring-fg{
+  stroke: #4d8568; fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease;
+}
+.streak-hero__ring-text{
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: var(--brand);
+  letter-spacing: -.03em; line-height: 1;
+}
+.streak-hero__ring-unit{
+  font-size: 9px; font-weight: 700;
+  color: var(--ink-2);
+  letter-spacing: .04em; text-transform: uppercase;
+  margin-top: 2px;
+}
+.streak-hero__body{ flex: 1; min-width: 0 }
+.streak-hero__title{
+  font-size: 17px; font-weight: 800; color: var(--ink);
+  letter-spacing: -.025em; line-height: 1.2;
+  margin: 0 0 4px;
+}
+.streak-hero__desc{
+  font-size: 13px; color: var(--ink-2); line-height: 1.45;
+  margin: 0 0 10px;
+}
+.streak-hero__badge{
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.7);
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; color: var(--ink-2);
+}
+.streak-hero__badge strong{
+  background: #4d8568; color: #fff;
+  padding: 2px 7px; border-radius: 999px;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* ===== FROSTI HERO (avatar + meta side-by-side) ===== */
+.frosti-hero{
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+}
+.frosti-hero__stage{
+  aspect-ratio: 1/1 !important;
+  background: linear-gradient(160deg, #e7f1f9, #cee1ee) !important;
+  border-radius: 18px;
+  border: 0;
+  position: relative; overflow: hidden;
+  margin: 0;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.frosti-hero__stage::before, .frosti-hero__stage::after{ display: none }
+.frosti-hero__stage .avatar-stage__avatar{ width: 92%; max-height: 95% }
+.frosti-hero__meta{ display: flex; flex-direction: column; gap: 4px }
+.frosti-hero__rank{
+  display: inline-block; align-self: flex-start;
+  background: var(--brand-soft); color: var(--brand);
+  padding: 3px 9px; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: -.005em;
+}
+.frosti-hero__name{
+  margin: 6px 0 2px;
+  font-family: var(--sans); font-weight: 800;
+  font-size: 24px; letter-spacing: -.028em;
+  color: var(--ink); line-height: 1.05;
+}
+.frosti-hero__level{
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px; color: var(--ink-2);
+  margin-top: 4px;
+}
+.frosti-hero__level strong{ color: var(--ink); font-weight: 800 }
+.frosti-hero__level .dim{ color: var(--ink-3); font-variant-numeric: tabular-nums }
+.frosti-hero__bar{
+  height: 5px; background: var(--surface-2);
+  border-radius: 3px; overflow: hidden; margin-top: 4px;
+}
+.frosti-hero__fill{
+  height: 100%; width: 0%; border-radius: 3px;
+  background: linear-gradient(90deg, #4d8568, #a3d977);
+  transition: width 1s cubic-bezier(.2,.7,.2,1);
+}
+
+/* ===== ENTRIES (card list with dotted timeline) ===== */
+.entries{ margin-bottom: 22px }
+.entries__head{
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.entries__title{
+  font-size: 18px; font-weight: 800; color: var(--ink);
+  letter-spacing: -.022em; margin: 0;
+}
+.entries__more{
+  appearance: none; border: 0; background: transparent;
+  font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--ink-3); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.entries__more:hover{ color: var(--ink) }
+
+.entries__list{
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+}
+.entry{
+  display: flex; gap: 12px; position: relative;
+  padding: 4px 0;
+}
+.entry + .entry{
+  margin-top: 12px; padding-top: 14px;
+}
+.entry__icon-wrap{
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; flex-shrink: 0;
+}
+.entry__icon{
+  width: 38px; height: 38px; border-radius: 12px;
+  background: var(--entry-bg, #cae9b3); color: var(--entry-color, #2a5a2f);
+  display: grid; place-items: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  z-index: 2;
+}
+.entry__line{
+  position: absolute;
+  top: 38px; left: 50%; transform: translateX(-50%);
+  width: 2px; height: 30px;
+  background-image: linear-gradient(to bottom, var(--ink-3) 50%, transparent 50%);
+  background-size: 2px 6px;
+  opacity: .35;
+}
+.entry:last-child .entry__line{ display: none }
+.entry__body{ flex: 1; min-width: 0; padding-top: 4px }
+.entry__title-row{
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.entry__title{
+  font-weight: 700; font-size: 14px; color: var(--ink);
+  letter-spacing: -.015em; line-height: 1.25;
+}
+.entry__menu{
+  appearance: none; border: 0; background: transparent;
+  cursor: pointer; color: var(--ink-3);
+  width: 24px; height: 20px; padding: 0; font-size: 16px;
+  letter-spacing: 1px; line-height: 1;
+}
+.entry__desc{
+  font-size: 13px; color: var(--ink-2);
+  line-height: 1.4; margin: 3px 0 6px;
+}
+.entry__foot{
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
+.entry__time{
+  font-size: 12px; color: var(--ink-3); font-weight: 500;
+  letter-spacing: -.005em;
+}
+.entry__pts{
+  font-size: 12px; color: var(--brand); font-weight: 800;
+  background: var(--brand-soft);
+  padding: 3px 8px; border-radius: 6px;
+}
+
+.add-entry{
+  appearance: none; border: 0; cursor: pointer; font: inherit;
+  width: 100%; margin-top: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 14px 22px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-weight: 700; font-size: 14px; color: var(--ink);
+  letter-spacing: -.01em;
+  transition: all .2s ease;
+}
+.add-entry:hover{
+  background: var(--ink); color: #fff;
+  border-color: var(--ink);
+}
+.add-entry:hover svg circle{ fill: #fff }
+.add-entry:hover svg path{ stroke: var(--ink) }
 
 /* ===== BIG HERO (Avatar foreground) ===== */
 .hero-big{

@@ -618,6 +618,12 @@ function renderAll(animate=false){
   renderAvatar($("#avatarStage"), { level: currentLevel });
   const profEl = $("#profileAvatar");
   if(profEl) renderAvatar(profEl, { level: currentLevel });
+  const topAv = $("#topHeaderAvatar");
+  if(topAv) renderAvatar(topAv, { level: currentLevel });
+
+  renderWeekStrip();
+  renderStreakHero();
+  renderEntries();
   renderEvolutionPath(currentLevel);
   renderCommunityChallenge();
   renderAvatarMeta();
@@ -864,6 +870,98 @@ function openArticle(articleId){
 }
 
 window.REWARD_LADDER = REWARD_LADDER;
+
+/* ---------- New Home Components (week strip / streak hero / entries) ---------- */
+
+function renderWeekStrip(){
+  const el = $("#weekStrip"); if(!el) return;
+  const days = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+  const today = new Date();
+  const dow = (today.getDay() + 6) % 7; // 0 = Mo
+  const visitsThisWeek = state.weekVisits || 0;
+  el.innerHTML = days.map((d, i) => {
+    const isClosed = i === 6;
+    const isToday = i === dow;
+    const isDone = !isClosed && i < dow && i < visitsThisWeek;
+    return `<div class="wk-strip-day ${isDone?'is-done':''} ${isToday?'is-today':''} ${isClosed?'is-closed':''}">
+      <span class="wk-strip-day__label ${isToday?'wk-strip-day__label--today':''}">${d}</span>
+      <span class="wk-strip-day__icon">
+        ${isDone ? '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : isToday ? '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3s4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-3s1 2 3 2c0-3-3-5 0-8z" fill="currentColor"/></svg>'
+        : isClosed ? '×'
+        : '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3s4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-3s1 2 3 2c0-3-3-5 0-8z" fill="currentColor" opacity=".55"/></svg>'}
+      </span>
+    </div>`;
+  }).join("");
+}
+
+function renderStreakHero(){
+  const el = $("#streakHero"); if(!el) return;
+  const streak = state.weeklyStreak || 0;
+  const longest = Math.max(streak, 14); // placeholder for "longest"
+  const visits = state.visits || 0;
+  const ringCircumference = 2 * Math.PI * 34; // r=34
+  const progress = Math.min(1, visits / 50);
+  const dashOffset = ringCircumference * (1 - progress);
+  el.innerHTML = `
+    <div class="streak-hero__ring">
+      <svg viewBox="0 0 80 80">
+        <circle class="streak-hero__ring-bg" cx="40" cy="40" r="34" stroke-width="6"/>
+        <circle class="streak-hero__ring-fg" cx="40" cy="40" r="34" stroke-width="6"
+                stroke-dasharray="${ringCircumference}" stroke-dashoffset="${dashOffset}"/>
+      </svg>
+      <div class="streak-hero__ring-text">
+        ${visits}
+        <span class="streak-hero__ring-unit">Besuche</span>
+      </div>
+    </div>
+    <div class="streak-hero__body">
+      <h3 class="streak-hero__title">${streak > 0 ? `${streak} Woche${streak===1?'':'n'} in Folge dabei` : "Starte deine erste Streak"}</h3>
+      <p class="streak-hero__desc">${visits > 0
+        ? `Du hast bereits ${visits} Besuch${visits===1?'':'e'} gesammelt. Frosti wächst mit jedem Termin.`
+        : `Beim ersten Check-in geht's los. Sammle Punkte und löse sie als Rabatt ein.`}</p>
+      <span class="streak-hero__badge">Längste Streak<strong>${longest} W.</strong></span>
+    </div>
+  `;
+}
+
+function renderEntries(){
+  const el = $("#entriesList"); if(!el) return;
+  // Build "today's entries" from latest visits + active boosters as quick actions
+  const colors = {
+    cryo:  { bg: "#dceaf6", fg: "#1854a8" },
+    lymph: { bg: "#dcf0ea", fg: "#2a8a6e" },
+    scan:  { bg: "#ebe0f4", fg: "#7c4fb8" },
+    combo: { bg: "#fdeed1", fg: "#a8631a" },
+  };
+  const items = SERVICES.filter(s => s.id !== "combo").map(s => {
+    const c = colors[s.id] || { bg: "#e6ece8", fg: "#1f3d2e" };
+    return {
+      id: s.id, name: s.name, desc: s.meta, icon: s.icon,
+      bg: c.bg, fg: c.fg, points: s.points,
+      sub: state.counts && state.counts[s.id] ? `${state.counts[s.id]}× besucht` : "Noch nicht gebucht",
+    };
+  });
+  el.innerHTML = items.map((it, idx) => `
+    <article class="entry">
+      <div class="entry__icon-wrap">
+        <div class="entry__icon" style="--entry-bg:${it.bg};--entry-color:${it.fg}">${esc(it.icon)}</div>
+        ${idx < items.length - 1 ? '<span class="entry__line"></span>' : ''}
+      </div>
+      <div class="entry__body">
+        <div class="entry__title-row">
+          <span class="entry__title">${esc(it.name)}</span>
+          <button class="entry__menu" aria-label="Menü">⋯</button>
+        </div>
+        <div class="entry__desc">${esc(it.desc)}</div>
+        <div class="entry__foot">
+          <span class="entry__time">${esc(it.sub)}</span>
+          <span class="entry__pts">+${it.points} Pkt</span>
+        </div>
+      </div>
+    </article>
+  `).join("");
+}
 
 /* ---------- Avatar meta (hearts + name tag) ---------- */
 function renderAvatarMeta(){
