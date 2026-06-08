@@ -323,9 +323,10 @@ function composeAvatarSVG(presetId, opts){
 
 /* ---- Image-direct rendering (browser handles caching) ---- */
 const AVATAR_IMAGE_BASE = "./assets/avatars/";
+const AVATAR_IMAGE_VERSION = "v3.5";  // bump to force re-fetch when PNGs are updated
 
 function avatarImagePath(presetId, level){
-  return `${AVATAR_IMAGE_BASE}${presetId}-${level}.png`;
+  return `${AVATAR_IMAGE_BASE}${presetId}-${level}.png?v=${AVATAR_IMAGE_VERSION}`;
 }
 
 /* Global error handler so onerror in HTML can reach it */

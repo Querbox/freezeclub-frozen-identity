@@ -1426,7 +1426,7 @@ function maybeShowInstallPrompt(){
   if(isIOSSafari()){
     showInstallBanner({
       title: "Frosti aufs iPhone holen",
-      desc: "Tippe unten auf Teilen, dann „Zum Home-Bildschirm".",
+      desc: "Tippe unten auf Teilen, dann „Zum Home-Bildschirm“.",
       cta: "Verstanden",
       onCta: () => dismissInstallBanner(true),
     });

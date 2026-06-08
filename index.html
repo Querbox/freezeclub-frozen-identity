@@ -463,6 +463,12 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
+      let _reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (_reloaded) return;
+        _reloaded = true;
+        location.reload();
+      });
     });
   }
 </script>
