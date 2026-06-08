@@ -217,36 +217,38 @@
         <!-- Week strip -->
         <div class="week-strip" id="weekStrip"></div>
 
-        <!-- Big Frosti Hero -->
-        <article class="frosti-hero">
-          <div class="frosti-hero__stage avatar-stage">
-            <div class="avatar-stage__avatar" id="avatarStage"></div>
-          </div>
-          <div class="frosti-hero__meta">
-            <span class="frosti-hero__rank" id="rankLabel">Frostknospe</span>
-            <h2 class="frosti-hero__name" id="avatarName">Frosti</h2>
-            <div class="frosti-hero__level">
-              <span>Level <strong id="levelNum">1</strong></span>
-              <span class="dim"><span id="seasonPoints">0</span> / <span id="seasonGoal">500</span></span>
-            </div>
-            <div class="frosti-hero__bar"><div class="frosti-hero__fill" id="levelFill"></div></div>
-          </div>
-        </article>
-
-        <!-- Sage-green streak hero card -->
+        <!-- Sage-green streak hero card (main hero now) -->
         <article class="streak-hero" id="streakHero"></article>
 
-        <!-- Today's entries section (card list) -->
-        <section class="entries">
-          <header class="entries__head">
-            <h3 class="entries__title">Heute</h3>
-            <button class="entries__more" data-go="checkin">Alle ansehen <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 8l4 4-4 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <!-- Hidden Frosti avatar stage for renderer (kept for editor compat) -->
+        <div class="avatar-stage hidden" id="avatarStage"></div>
+        <span id="rankLabel" hidden>Frostknospe</span>
+        <span id="avatarName" hidden>Frosti</span>
+        <span id="levelNum" hidden>1</span>
+        <span id="seasonPoints" hidden>0</span>
+        <span id="seasonGoal" hidden>500</span>
+        <span id="streakCount" hidden>0</span>
+        <span id="weekVisits" hidden>0</span>
+        <span id="weekGoal" hidden>2</span>
+        <div class="hidden" id="levelFill"></div>
+        <div class="hidden" id="weekTrack"></div>
+
+        <!-- HOW TO EARN POINTS — primary section, visually rich -->
+        <section class="earn-section">
+          <header class="earn-section__head">
+            <h3 class="earn-section__title">So sammelst du Eis-Punkte</h3>
+            <span class="earn-section__sub">200 Pkt = 1 € Rabatt</span>
           </header>
-          <div class="entries__list" id="entriesList"></div>
-          <button class="add-entry" data-go="checkin">
-            <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="11" fill="#1f3d2e"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-            <span>Jetzt einchecken</span>
-          </button>
+          <div class="earn-grid" id="earnGrid"></div>
+        </section>
+
+        <!-- Active Challenges -->
+        <section class="earn-section">
+          <header class="earn-section__head">
+            <h3 class="earn-section__title">Aktive Aufgaben</h3>
+            <span class="earn-section__sub">Extra Punkte</span>
+          </header>
+          <div class="challenge-list" id="challengeListNew"></div>
         </section>
 
         <!-- Next Reward Progress -->
@@ -255,48 +257,18 @@
         <!-- Daily Knowledge Card -->
         <article class="card card--daily" id="dailyArticleCard"></article>
 
-        <!-- Wochenziel Card -->
-        <article class="card card--week">
-          <header class="card-row">
-            <div>
-              <p class="eyebrow">Wochenziel</p>
-              <h3 class="card__title"><span id="weekVisits">0</span> / <span id="weekGoal">2</span> Besuche</h3>
-            </div>
-            <span class="streak-chip" title="Wochen-Streak">
-              <svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 3s4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-3s1 2 3 2c0-3-3-5 0-8z" fill="currentColor"/></svg>
-              <span><strong id="streakCount">0</strong> Wochen</span>
-            </span>
-          </header>
-          <div class="week-track" id="weekTrack"></div>
-        </article>
+        <!-- Quick check-in CTA -->
+        <button class="add-entry" data-go="checkin">
+          <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="11" fill="#1f3d2e"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          <span>Jetzt einchecken</span>
+        </button>
 
-        <!-- Booster Section -->
-        <section class="section">
-          <header class="section__head">
-            <h3 class="section__title">Sammle Eis-Punkte</h3>
-            <button class="section__more" data-go="checkin">Alle ansehen</button>
-          </header>
-          <div class="boosters" id="boostersList"></div>
-        </section>
-
-        <!-- Active Missions/Challenges (mini) -->
-        <section class="section">
-          <header class="section__head">
-            <h3 class="section__title">Aktive Aufgaben</h3>
-          </header>
-          <div class="challenges" id="challengesList"></div>
-        </section>
-
-        <!-- Community Challenge Card -->
+        <!-- Hidden legacy elements for other render fns (avoid null errors) -->
+        <div class="boosters hidden" id="boostersList"></div>
+        <div class="challenges hidden" id="challengesList"></div>
         <article class="card card--community hidden" id="communityCard"></article>
-
-        <!-- Achievements teaser (horizontal scroll) -->
-        <section class="section">
-          <header class="section__head">
-            <h3 class="section__title">Deine Badges</h3>
-          </header>
-          <ul class="achievements" id="achievementsList"></ul>
-        </section>
+        <ul class="achievements hidden" id="achievementsList"></ul>
+        <div class="entries__list hidden" id="entriesList"></div>
       </section>
 
       <!-- CHECK-IN -->

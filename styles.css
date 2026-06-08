@@ -992,6 +992,18 @@ body::before{
   .part-row__value{ font-size: 16px }
   .nav-btn{ width: 38px; height: 38px }
 
+  /* Earn cards on mobile */
+  .earn-section{ margin-bottom: 18px }
+  .earn-grid{ gap: 8px }
+  .earn-card{ padding: 12px; border-radius: 14px }
+  .earn-card__icon{ width: 34px; height: 34px; font-size: 18px }
+  .earn-card__title{ font-size: 13px }
+  .earn-card__desc{ font-size: 11px }
+  .ch-card{ padding: 12px; border-radius: 12px }
+  .ch-card__title{ font-size: 13px }
+  .ch-card__desc{ font-size: 11px }
+  .ch-card__icon{ width: 32px; height: 32px; font-size: 14px }
+
   /* New hero on mobile */
   .frosti-hero{ padding: 14px; gap: 12px; border-radius: 18px }
   .frosti-hero__name{ font-size: 20px }
@@ -1973,6 +1985,118 @@ body::before{
 }
 .goal-tile__label{ font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: -.005em }
 .goal-tile__hint{ font-size: 11px; color: var(--ink-3); margin-top: 2px }
+
+/* ===== "So sammelst du Punkte" — primary earn section ===== */
+.earn-section{ margin-bottom: 22px }
+.earn-section__head{
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.earn-section__title{
+  font-size: 18px; font-weight: 800; color: var(--ink);
+  letter-spacing: -.022em; margin: 0;
+}
+.earn-section__sub{
+  font-size: 12px; color: var(--ink-3); font-weight: 600;
+  letter-spacing: -.005em;
+}
+.earn-grid{
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+.earn-card{
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  transition: border-color .2s ease;
+}
+.earn-card:hover{ border-color: var(--ink-3) }
+.earn-card__icon{
+  width: 40px; height: 40px; border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.earn-card__title{
+  font-weight: 800; font-size: 14px; color: var(--ink);
+  letter-spacing: -.015em; line-height: 1.2;
+}
+.earn-card__desc{
+  font-size: 12px; color: var(--ink-2);
+  margin-top: 2px; line-height: 1.4;
+}
+.earn-card__foot{
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line);
+}
+.earn-card__reward{
+  font-size: 11px; font-weight: 800; color: var(--brand);
+  letter-spacing: -.005em;
+}
+.earn-card__cta{
+  appearance: none; border: 0; background: transparent;
+  cursor: pointer; font: inherit;
+  font-size: 12px; font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.005em;
+}
+.earn-card__cta:hover{ color: var(--brand) }
+
+/* ===== Challenge cards ===== */
+.challenge-list{
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ch-card{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ch-card.is-done{
+  background: linear-gradient(135deg, #e9f5d6, #d3eaad);
+  border-color: rgba(31,61,46,.18);
+}
+.ch-card__top{
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.ch-card__icon{
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--brand-soft); color: var(--brand);
+  display: grid; place-items: center;
+  font-size: 16px; font-weight: 800;
+  flex-shrink: 0;
+}
+.ch-card.is-done .ch-card__icon{ background: #4d8568; color: #fff }
+.ch-card__body{ flex: 1; min-width: 0 }
+.ch-card__title{
+  font-weight: 800; font-size: 14px; color: var(--ink);
+  letter-spacing: -.015em; line-height: 1.25;
+}
+.ch-card__desc{
+  font-size: 12px; color: var(--ink-2);
+  line-height: 1.4; margin-top: 2px;
+}
+.ch-card__reward{
+  background: rgba(31,61,46,.08); color: var(--brand);
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 800;
+  white-space: nowrap; flex-shrink: 0;
+}
+.ch-card__bar{
+  height: 5px; background: var(--surface-2);
+  border-radius: 3px; overflow: hidden;
+}
+.ch-card__fill{
+  height: 100%; background: linear-gradient(90deg, #4d8568, #a3d977);
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(.2,.7,.2,1);
+}
+.ch-card__meta{
+  font-size: 11px; color: var(--ink-3); font-weight: 600;
+  letter-spacing: -.005em;
+}
 
 /* ===== TOP HEADER (avatar + date + bell) ===== */
 .top-header{

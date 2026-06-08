@@ -55,6 +55,35 @@ function completeOnboarding(){
   }, 400);
 }
 
+// Bulletproof tab navigation
+document.addEventListener("click", function(e){
+  if(!e.target.closest) return;
+  // Tab buttons
+  var tab = e.target.closest("[data-tab]");
+  if(tab){
+    e.preventDefault();
+    var name = tab.dataset.tab;
+    if(name === "editor" || name === "challenges") name = "profile";
+    document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("is-active", t.dataset.tab === name); });
+    document.querySelectorAll(".bnav").forEach(function(b){ b.classList.toggle("is-active", b.dataset.tab === name); });
+    document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("is-active", v.id === "view-"+name); });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  // data-go redirects (button links to a tab)
+  var go = e.target.closest("[data-go]");
+  if(go){
+    e.preventDefault();
+    var gname = go.dataset.go;
+    if(gname === "editor" || gname === "challenges") gname = "profile";
+    document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("is-active", t.dataset.tab === gname); });
+    document.querySelectorAll(".bnav").forEach(function(b){ b.classList.toggle("is-active", b.dataset.tab === gname); });
+    document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("is-active", v.id === "view-"+gname); });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+}, true);
+
 document.addEventListener("click", function(e){
   // Next button
   if(e.target.closest && e.target.closest("#onboardingNext")){
@@ -178,8 +207,9 @@ function buildShopItems(){
 }
 const SHOP_ITEMS = buildShopItems();
 
-/* ===== Point-to-Euro anchor — shown everywhere ===== */
-const POINTS_PER_EURO = 100;
+/* ===== Point-to-Euro anchor — shown everywhere =====
+   200 Pkt = 1 €  (Punkte sind weniger wert → langsamerer Cashback) */
+const POINTS_PER_EURO = 200;
 function pointsToEuro(pts){
   return (pts / POINTS_PER_EURO).toFixed(0) + " €";
 }
@@ -624,6 +654,8 @@ function renderAll(animate=false){
   renderWeekStrip();
   renderStreakHero();
   renderEntries();
+  renderEarnGrid();
+  renderChallengeList();
   renderEvolutionPath(currentLevel);
   renderCommunityChallenge();
   renderAvatarMeta();
@@ -961,6 +993,54 @@ function renderEntries(){
       </div>
     </article>
   `).join("");
+}
+
+function renderEarnGrid(){
+  const el = $("#earnGrid"); if(!el) return;
+  // 4 ways to earn — Anwendung, Off-Peak, Wissen, Wochenziel
+  const earned = (id) => state.counts && state.counts[id] ? state.counts[id] : 0;
+  const offPeak = getOffPeakBonus();
+  const cards = [
+    { id: "anwendung", title: "Anwendung buchen", desc: "Jede Session = sofort Punkte", icon: "❄", iconBg: "#dceaf6", iconFg: "#1854a8", reward: "+50–115 Pkt", action: "Buchen", go: "checkin" },
+    { id: "offpeak",   title: "Off-Peak Bonus",   desc: offPeak.active ? offPeak.desc : "Mo–Mi 10–14 Uhr · 2× Punkte", icon: "⚡", iconBg: offPeak.active ? "#fff5d0" : "#f1efe8", iconFg: offPeak.active ? "#946100" : "#8a7d3a", reward: offPeak.active ? "Aktiv jetzt" : "2× Multiplikator", action: offPeak.active ? "Buchen" : "Mehr", go: "checkin" },
+    { id: "wissen",    title: "Wissen lesen",     desc: "Eine Karte pro Tag = +25 Pkt", icon: "📖", iconBg: "#ebe0f4", iconFg: "#7c4fb8", reward: "+25 Pkt täglich", action: "Lesen", go: "home" },
+    { id: "weekly",    title: "Wochenziel",       desc: `${state.weekVisits || 0} / ${state.weekGoal || 2} diese Woche`, icon: "🎯", iconBg: "#dcf0ea", iconFg: "#2a8a6e", reward: "+50 Pkt Bonus", action: "Status", go: "profile" },
+  ];
+  el.innerHTML = cards.map(c => `
+    <article class="earn-card">
+      <div class="earn-card__icon" style="background:${c.iconBg};color:${c.iconFg}">${esc(c.icon)}</div>
+      <div class="earn-card__body">
+        <div class="earn-card__title">${esc(c.title)}</div>
+        <div class="earn-card__desc">${esc(c.desc)}</div>
+      </div>
+      <div class="earn-card__foot">
+        <span class="earn-card__reward">${esc(c.reward)}</span>
+        <button class="earn-card__cta" data-go="${c.go}">${esc(c.action)} →</button>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderChallengeList(){
+  const el = $("#challengeListNew"); if(!el) return;
+  if(!Array.isArray(CHALLENGES) || CHALLENGES.length === 0){ el.innerHTML = ""; return; }
+  el.innerHTML = CHALLENGES.map(c => {
+    const prog = (state.challengeProgress && state.challengeProgress[c.id]) || 0;
+    const pct = Math.min(100, (prog / c.goal) * 100);
+    const done = prog >= c.goal;
+    return `<article class="ch-card ${done?'is-done':''}">
+      <div class="ch-card__top">
+        <div class="ch-card__icon">${done ? "✓" : "★"}</div>
+        <div class="ch-card__body">
+          <div class="ch-card__title">${esc(c.title)}</div>
+          <div class="ch-card__desc">${esc(c.desc)}</div>
+        </div>
+        <span class="ch-card__reward">+${c.reward}</span>
+      </div>
+      <div class="ch-card__bar"><div class="ch-card__fill" style="width:${pct}%"></div></div>
+      <div class="ch-card__meta">${prog} / ${c.goal}${done ? " · erledigt" : ""}</div>
+    </article>`;
+  }).join("");
 }
 
 /* ---------- Avatar meta (hearts + name tag) ---------- */
