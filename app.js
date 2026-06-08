@@ -22,17 +22,40 @@ const RANKS = [
 
 const LEVEL_STEP = 500;
 
-/* Shop items — accessories + backgrounds + reward ladder.
-   Reward ladder is the MAIN motivator. Designed to give first reward after ~2 visits. */
-const REWARD_LADDER = [
-  { id: "reward-tea",        price: 200,  name: "Gratis Tee oder Kaffee",      icon: "☕", real_value: "≈ 3 €",   tier: 1 },
-  { id: "reward-towel",      price: 400,  name: "Premium-Handtuch inkl.",      icon: "🧖", real_value: "≈ 5 €",   tier: 2 },
-  { id: "reward-lymph50",    price: 600,  name: "50 % auf Lymphdrainage",      icon: "≋",  real_value: "≈ 15 €",  tier: 2 },
-  { id: "reward-discount10", price: 800,  name: "10 % Webshop-Code",           icon: "🎁", real_value: "Webshop", tier: 3 },
-  { id: "reward-cryo-free",  price: 1000, name: "Gratis Kältekammer",          icon: "❄",  real_value: "≈ 30 €",  tier: 3 },
-  { id: "reward-scan",       price: 2500, name: "4D-Bodyscan + Beratung",      icon: "◉",  real_value: "≈ 80 €",  tier: 4 },
-  { id: "reward-month",      price: 4500, name: "Gratis Freezeclub Monat",     icon: "★",  real_value: "≈ 199 €", tier: 5, limited: true },
+/* ===== Real Products — Cashback model (move2earn-style) =====
+   Members spend Eis-Punkte as cashback (100 Pkt = 1 €).
+   Each product has a max-discount cap to protect margin.
+   Studio services capped at 30–50 %, Webshop products up to 100 %. */
+const REAL_PRODUCTS = [
+  // Studio services
+  { id: "svc-cryo",   cat: "service", name: "Kältekammer Session",      price: 35,  icon: "❄",  maxDiscountPct: 50, desc: "3 Min bei −85 °C" },
+  { id: "svc-lymph",  cat: "service", name: "Lymphdrainage 30 Min",     price: 49,  icon: "≋",  maxDiscountPct: 50, desc: "Regeneration & Recovery" },
+  { id: "svc-scan",   cat: "service", name: "4D-Bodyscan",              price: 89,  icon: "◉",  maxDiscountPct: 30, desc: "Inkl. Auswertung" },
+  { id: "svc-combo",  cat: "service", name: "Kombi-Session",            price: 75,  icon: "✦",  maxDiscountPct: 40, desc: "Kältekammer + Lymphe" },
+  { id: "svc-month",  cat: "service", name: "Monatsmitgliedschaft",     price: 199, icon: "★",  maxDiscountPct: 20, desc: "Unbegrenzter Zugang" },
+  // Webshop products
+  { id: "shop-hoodie",cat: "webshop", name: "Freezeclub Hoodie",        price: 89,  icon: "👕", maxDiscountPct: 50, desc: "Heavyweight, Bio-Baumwolle" },
+  { id: "shop-bottle",cat: "webshop", name: "Frost Bottle 750 ml",      price: 29,  icon: "🍶", maxDiscountPct: 100,desc: "Doppelwandig, vakuumisoliert" },
+  { id: "shop-supp",  cat: "webshop", name: "Recovery Supplement",      price: 39,  icon: "💊", maxDiscountPct: 50, desc: "Magnesium + Elektrolyte" },
+  { id: "shop-towel", cat: "webshop", name: "Premium Handtuch",         price: 19,  icon: "🧖", maxDiscountPct: 100,desc: "Microfiber, Freezeclub-Logo" },
+  { id: "shop-tee",   cat: "webshop", name: "Statement T-Shirt",        price: 35,  icon: "👕", maxDiscountPct: 100,desc: "100 % Baumwolle, Unisex" },
 ];
+
+/* Compute max applicable discount for a product based on user's balance */
+function maxDiscountFor(product){
+  if(!product) return { points: 0, euro: 0, finalPrice: product?.price ?? 0 };
+  const balanceEuro = state.points / POINTS_PER_EURO;
+  const productCapEuro = product.price * (product.maxDiscountPct / 100);
+  const discountEuro = Math.min(balanceEuro, productCapEuro);
+  const points = Math.floor(discountEuro * POINTS_PER_EURO);
+  return {
+    points,
+    euro: Math.floor(discountEuro * 100) / 100,
+    finalPrice: Math.max(0, product.price - discountEuro),
+    capPct: product.maxDiscountPct,
+    capEuro: productCapEuro,
+  };
+}
 
 function buildShopItems(){
   const items = [];
@@ -58,18 +81,6 @@ function buildShopItems(){
       colors: b.colors,
       limited: !!b.limited,
       color: "#1f3d2e",
-    });
-  }
-  // Reward ladder (real-world)
-  for(const r of REWARD_LADDER){
-    items.push({
-      id: r.id, cat: "reward",
-      name: r.name, price: r.price,
-      emoji: r.icon,
-      realValue: r.real_value,
-      tier: r.tier,
-      limited: !!r.limited,
-      color: "#1f3d2e", preview: "#e6ece8",
     });
   }
   return items;
@@ -656,34 +667,55 @@ function renderHomeBanners(){
 function renderNextReward(){
   const el = $("#nextRewardCard");
   if(!el) return;
-  const rewards = (window.REWARD_LADDER || REWARD_LADDER).filter(r => !state.inventory.includes(r.id));
-  const next = rewards.find(r => state.points < r.price) || rewards[0];
-  if(!next){ el.classList.add("hidden"); return; }
+  // Pick the most attractive product where the user has at least 1 € discount
+  const candidates = REAL_PRODUCTS.map(p => {
+    const d = maxDiscountFor(p);
+    return { p, d };
+  }).filter(x => x.d.euro >= 1)
+    .sort((a,b) => b.d.euro - a.d.euro); // biggest possible discount first
+
+  // If no eligible discount yet — show goal-gradient toward cheapest service
+  if(candidates.length === 0){
+    const cheapest = REAL_PRODUCTS.filter(p => p.cat === "service").sort((a,b)=>a.price-b.price)[0];
+    if(!cheapest){ el.classList.add("hidden"); return; }
+    const targetPoints = 100; // enough for 1 € discount
+    const pct = Math.min(100, (state.points / targetPoints) * 100);
+    el.classList.remove("hidden");
+    el.innerHTML = `
+      <header class="card-row">
+        <div>
+          <p class="eyebrow">Erstes Guthaben</p>
+          <h3 class="card__title">Sammle 100 Pkt für 1 € Rabatt</h3>
+          <p class="reward-progress__sub">Dann auf jede Anwendung anwendbar</p>
+        </div>
+        <span class="reward-progress__icon">${esc(cheapest.icon)}</span>
+      </header>
+      <div class="progress">
+        <div class="progress__bar"><div class="progress__fill" style="width:${pct}%;background:var(--brand)"></div></div>
+        <div class="progress__meta">
+          <span>${state.points.toLocaleString("de-DE")} / ${targetPoints} Pkt</span>
+          <span>${Math.max(0, targetPoints - state.points)} Pkt fehlen</span>
+        </div>
+      </div>
+      <button class="btn--cta btn--cta-ghost" data-go="checkin">Punkte sammeln</button>
+    `;
+    return;
+  }
+
+  // Show the BEST currently-redeemable offer
+  const best = candidates[0];
   el.classList.remove("hidden");
-
-  const owned = state.points >= next.price;
-  const pct = Math.min(100, (state.points / next.price) * 100);
-  const remaining = Math.max(0, next.price - state.points);
-
   el.innerHTML = `
     <header class="card-row">
       <div>
-        <p class="eyebrow">Nächste Belohnung</p>
-        <h3 class="card__title">${esc(next.name)}</h3>
-        <p class="reward-progress__sub">Wert ${esc(next.real_value || "—")} · ${next.price} Pkt</p>
+        <p class="eyebrow">Dein Guthaben · ${pointsToEuro(state.points)}</p>
+        <h3 class="card__title">${best.d.euro.toFixed(2)} € Rabatt auf ${esc(best.p.name)}</h3>
+        <p class="reward-progress__sub">Endpreis ${best.d.finalPrice.toFixed(2)} € · sofort einlösbar</p>
       </div>
-      <span class="reward-progress__icon">${esc(next.icon)}</span>
+      <span class="reward-progress__icon">${esc(best.p.icon)}</span>
     </header>
-    <div class="progress">
-      <div class="progress__bar"><div class="progress__fill" style="width:${pct}%;background:var(--brand)"></div></div>
-      <div class="progress__meta">
-        <span>${state.points.toLocaleString("de-DE")} / ${next.price} Pkt</span>
-        <span>${owned ? "Verfügbar!" : `Noch ${remaining} Pkt`}</span>
-      </div>
-    </div>
-    ${owned
-      ? `<button class="btn--cta" data-buy="${esc(next.id)}">Jetzt einlösen</button>`
-      : `<button class="btn--cta btn--cta-ghost" data-go="shop">Alle Belohnungen ansehen</button>`}
+    <button class="btn--cta" data-redeem="${esc(best.p.id)}">${best.d.euro.toFixed(2)} € einlösen</button>
+    <button class="btn--cta btn--cta-ghost" data-go="shop" style="margin-top:6px">Alle Produkte ansehen</button>
   `;
 }
 
@@ -843,41 +875,138 @@ function unequipSlot(slot){
 }
 
 let currentFilter = "all";
-let shopMode = "shop"; // "shop" or "inventory"
+let shopMode = "shop";
+
 function renderShop(filter = currentFilter){
-  let items = SHOP_ITEMS.filter(i => filter === "all" || i.cat === filter);
-  if(shopMode === "inventory"){
-    items = items.filter(i => state.inventory.includes(i.id));
-  }
-  if(items.length === 0){
-    $("#shopGrid").innerHTML = `<div class="shop-empty">
-      <div class="shop-empty__icon">${shopMode === 'inventory' ? '📦' : '✨'}</div>
-      <p class="shop-empty__text">${shopMode === 'inventory' ? 'Noch keine Items im Inventar.' : 'Keine Items in dieser Kategorie.'}</p>
-    </div>`;
+  const grid = $("#shopGrid");
+  if(!grid) return;
+
+  // Branch 1: Real products (cashback) for 'service'/'webshop'/'all'
+  if(filter === "service" || filter === "webshop"){
+    const products = REAL_PRODUCTS.filter(p => p.cat === filter);
+    grid.innerHTML = `
+      <div class="cashback-info">
+        <div class="cashback-info__balance">Dein Guthaben: <strong>${pointsToEuro(state.points)}</strong></div>
+        <div class="cashback-info__hint">100 Pkt = 1 € Rabatt · einlösbar auf Produkte unten</div>
+      </div>
+      <div class="cashback-grid">${products.map(renderCashbackCard).join("")}</div>
+    `;
     return;
   }
-  $("#shopGrid").innerHTML = items.map(i => {
-    const owned = state.inventory.includes(i.id);
-    const equipped = state.equipped[i.cat] === i.id;
-    const canBuy = state.points >= i.price;
-    const cardBg = `linear-gradient(180deg, ${shade(i.color, 18)}, ${shade(i.color, -8)})`;
-    const previewBg = `radial-gradient(circle at 35% 30%, #fff, ${i.preview} 60%, ${shade(i.preview, -15)} 100%)`;
-    return `<article class="item" style="--card-bg:${cardBg}; --preview-bg:${previewBg}">
-      <div class="item__preview ${i.limited?'is-limited':''}">${i.emoji}</div>
-      <span class="item__name">${esc(i.name)}</span>
-      <div class="item__footer">
-        ${owned
-          ? (equipped
-              ? `<button class="btn--equip is-equipped" data-equip="${esc(i.id)}">✓ Aktiv</button>`
-              : `<button class="btn--equip" data-equip="${esc(i.id)}">Anziehen</button>`)
-          : (canBuy
-              ? `<button class="btn--buy" data-buy="${esc(i.id)}"><span class="price">${i.price}</span></button>`
-              : `<button class="btn--buy" disabled><span class="price">${i.price}</span></button>`)}
-      </div>
-    </article>`;
-  }).join("");
+
+  // Branch 2: Digital items (accessoire/background) — fixed point cost
+  if(filter === "accessoire" || filter === "background"){
+    let items = SHOP_ITEMS.filter(i => i.cat === filter);
+    if(shopMode === "inventory") items = items.filter(i => state.inventory.includes(i.id));
+    if(items.length === 0){
+      grid.innerHTML = `<div class="shop-empty">
+        <div class="shop-empty__icon">${shopMode === 'inventory' ? '📦' : '✨'}</div>
+        <p class="shop-empty__text">${shopMode === 'inventory' ? 'Noch keine Items im Inventar.' : 'Keine Items in dieser Kategorie.'}</p>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = items.map(renderDigitalCard).join("");
+    return;
+  }
+
+  // Branch 3: "Alle" — show real products first, then digital
+  const realCards = REAL_PRODUCTS.map(renderCashbackCard).join("");
+  const digitalItems = SHOP_ITEMS.filter(i => !shopMode === "inventory" ? true : state.inventory.includes(i.id));
+  const digitalCards = digitalItems.map(renderDigitalCard).join("");
+  grid.innerHTML = `
+    <div class="cashback-info">
+      <div class="cashback-info__balance">Dein Guthaben: <strong>${pointsToEuro(state.points)}</strong></div>
+      <div class="cashback-info__hint">100 Pkt = 1 € · einlösbar auf reale Produkte</div>
+    </div>
+    <div class="shop-section-title">Anwendungen & Webshop</div>
+    <div class="cashback-grid">${realCards}</div>
+    <div class="shop-section-title">Avatar-Items</div>
+    <div class="shop-grid-digital">${digitalCards}</div>
+  `;
 }
-function catLabel(c){ return { accessoire:"Accessoires", background:"Hintergründe", reward:"Belohnungen" }[c] || c }
+
+function renderCashbackCard(p){
+  const d = maxDiscountFor(p);
+  const hasDiscount = d.euro >= 1;
+  const pctApplied = Math.round((d.euro / p.price) * 100);
+  return `<article class="cashback-card">
+    <div class="cashback-card__head">
+      <div class="cashback-card__icon">${esc(p.icon)}</div>
+      <div class="cashback-card__meta">
+        <div class="cashback-card__name">${esc(p.name)}</div>
+        <div class="cashback-card__desc">${esc(p.desc)}</div>
+      </div>
+    </div>
+    <div class="cashback-card__price-row">
+      <div class="cashback-card__prices">
+        ${hasDiscount
+          ? `<span class="cashback-card__original">${p.price.toFixed(0)} €</span>
+             <span class="cashback-card__final">${d.finalPrice.toFixed(2)} €</span>`
+          : `<span class="cashback-card__final">${p.price.toFixed(0)} €</span>`}
+      </div>
+      ${hasDiscount
+        ? `<span class="cashback-card__pill">−${d.euro.toFixed(2)} € (${pctApplied} %)</span>`
+        : `<span class="cashback-card__cap">bis ${p.maxDiscountPct} % Rabatt möglich</span>`}
+    </div>
+    ${hasDiscount
+      ? `<button class="btn--cta cashback-card__btn" data-redeem="${esc(p.id)}">${d.euro.toFixed(2)} € einlösen (${d.points} Pkt)</button>`
+      : `<button class="btn--cta btn--cta-ghost cashback-card__btn" disabled>Erst Punkte sammeln</button>`}
+  </article>`;
+}
+
+function renderDigitalCard(i){
+  const owned = state.inventory.includes(i.id);
+  const equipped = state.equipped[i.cat] === i.id;
+  const canBuy = state.points >= i.price;
+  return `<article class="item">
+    <div class="item__preview ${i.limited?'is-limited':''}">${i.emoji}</div>
+    <span class="item__name">${esc(i.name)}</span>
+    <div class="item__footer">
+      ${owned
+        ? (equipped
+            ? `<button class="btn--equip is-equipped" data-equip="${esc(i.id)}">✓ Aktiv</button>`
+            : `<button class="btn--equip" data-equip="${esc(i.id)}">Anziehen</button>`)
+        : (canBuy
+            ? `<button class="btn--buy" data-buy="${esc(i.id)}"><span class="price">${i.price}</span></button>`
+            : `<button class="btn--buy" disabled><span class="price">${i.price}</span></button>`)}
+    </div>
+  </article>`;
+}
+
+function catLabel(c){ return { service:"Anwendungen", webshop:"Webshop", accessoire:"Accessoires", background:"Hintergründe" }[c] || c }
+
+/* ===== Redeem cashback discount ===== */
+function redeemDiscount(productId){
+  const p = REAL_PRODUCTS.find(x => x.id === productId);
+  if(!p) return;
+  const d = maxDiscountFor(p);
+  if(d.points <= 0) return;
+
+  // Deduct points
+  state.points -= d.points;
+  save();
+
+  // Generate redemption code
+  const code = (p.id.toUpperCase().replace(/[-_]/g,"") + "-" + Math.random().toString(36).slice(2,6).toUpperCase());
+  state.redemptions = state.redemptions || [];
+  state.redemptions.push({ id: productId, code, points: d.points, euro: d.euro, date: new Date().toISOString() });
+  save();
+
+  sfx("buy");
+  confetti("epic");
+
+  const where = p.cat === "service" ? "an der Rezeption im Studio" : "im Webshop unter shop.freezeclub.de";
+  showModal({
+    eyebrow: "Rabatt eingelöst",
+    title: `${d.euro.toFixed(2)} € Rabatt`,
+    desc: `Auf ${p.name}\n\nDein Code:\n${code}\n\nGültig 30 Tage · einzulösen ${where}.\n\nNeuer Preis: ${d.finalPrice.toFixed(2)} € statt ${p.price.toFixed(0)} €.`,
+    art: p.icon,
+  });
+
+  renderAll(true);
+}
+
+window.REAL_PRODUCTS = REAL_PRODUCTS;
 
 /* ---------- Actions ---------- */
 function bookService(id, evtTarget){
@@ -1167,6 +1296,8 @@ function bindEvents(){
     const part = e.target.closest("[data-part]");
     const article = e.target.closest("[data-article]");
     if(article){ openArticle(article.dataset.article); return; }
+    const redeem = e.target.closest("[data-redeem]");
+    if(redeem){ redeemDiscount(redeem.dataset.redeem); return; }
     if(e.target.id === "claimComeback"){
       navigator.clipboard?.writeText("WIRVERMISSENDICH");
       toast("Code kopiert: WIRVERMISSENDICH · 30 % Rabatt");

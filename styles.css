@@ -1321,6 +1321,95 @@ body::before{
   100%{ transform: translateY(0) }
 }
 
+/* ===== CASHBACK SHOP (move2earn style) ===== */
+.cashback-info{
+  background: linear-gradient(135deg, var(--brand) 0%, #2a5240 100%);
+  color: #fff; padding: 18px 20px;
+  border-radius: 16px; margin-bottom: 18px;
+}
+.cashback-info__balance{
+  font-size: 14px; font-weight: 500; color: rgba(255,255,255,.85);
+}
+.cashback-info__balance strong{
+  font-size: 26px; font-weight: 700; color: #fff;
+  display: inline-block; margin-left: 8px;
+  letter-spacing: -.02em;
+}
+.cashback-info__hint{
+  font-size: 12px; color: rgba(255,255,255,.75);
+  margin-top: 6px;
+}
+.shop-section-title{
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  letter-spacing: -.015em; margin: 18px 0 10px;
+}
+
+.cashback-grid{
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+@media (max-width: 720px){
+  .cashback-grid{ grid-template-columns: 1fr }
+  .shop-grid-digital{ grid-template-columns: repeat(2, 1fr) }
+  .cashback-info{ padding: 16px }
+  .cashback-info__balance strong{ font-size: 24px }
+  .cashback-card{ padding: 14px }
+  .cashback-card__final{ font-size: 20px }
+}
+.cashback-card{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: border-color .2s ease;
+}
+.cashback-card:hover{ border-color: var(--brand) }
+.cashback-card__head{
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.cashback-card__icon{
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--brand-soft); color: var(--brand);
+  display: grid; place-items: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.cashback-card__meta{ flex: 1; min-width: 0 }
+.cashback-card__name{ font-weight: 700; font-size: 15px; color: var(--ink); letter-spacing: -.015em }
+.cashback-card__desc{ font-size: 12px; color: var(--ink-3); margin-top: 2px; letter-spacing: -.005em }
+.cashback-card__price-row{
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding-top: 6px; border-top: 1px solid var(--line);
+}
+.cashback-card__prices{ display: flex; align-items: baseline; gap: 8px }
+.cashback-card__original{
+  font-size: 14px; color: var(--ink-3); text-decoration: line-through;
+  font-weight: 500;
+}
+.cashback-card__final{
+  font-size: 22px; font-weight: 700; color: var(--ink);
+  letter-spacing: -.025em;
+}
+.cashback-card__pill{
+  background: #fef4d3; color: #946100;
+  padding: 5px 10px; border-radius: 6px;
+  font-size: 12px; font-weight: 700; letter-spacing: -.005em;
+  white-space: nowrap; flex-shrink: 0;
+}
+.cashback-card__cap{
+  font-size: 11px; color: var(--ink-3); letter-spacing: -.005em;
+  text-align: right;
+}
+.cashback-card__btn{
+  margin-top: 4px; width: 100%; justify-content: center;
+  text-align: center;
+}
+
+.shop-grid-digital{
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
 /* ===== BANNERS (Off-Peak, Comeback) ===== */
 .banner{
   display: flex; align-items: center; gap: 12px;
