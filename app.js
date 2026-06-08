@@ -22,18 +22,41 @@ const RANKS = [
 
 const LEVEL_STEP = 500;
 
-const SHOP_ITEMS = [
-  { id: "aura-frost",  name: "Frost Aura",      cat: "aura", price: 250,  emoji: "❄️", limited: false, color: "#5b8db0", preview: "#a8d0e0" },
-  { id: "aura-arctic", name: "Arctic Glow",     cat: "aura", price: 600,  emoji: "✨", limited: false, color: "#4a7a90", preview: "#b8d8e6" },
-  { id: "aura-cryo",   name: "Cryo Crystals",   cat: "aura", price: 1400, emoji: "💎", limited: true,  color: "#8e5fbf", preview: "#d4c0e8" },
-  { id: "gear-suit",   name: "Cryo Suit",       cat: "gear", price: 800,  emoji: "🥼", limited: false, color: "#3a4a5c", preview: "#7c98b0" },
-  { id: "gear-mask",   name: "Breath Mask",     cat: "gear", price: 450,  emoji: "😷", limited: false, color: "#c8826b", preview: "#f0c4b0" },
-  { id: "gear-visor",  name: "Lab Visor",       cat: "gear", price: 700,  emoji: "🥽", limited: false, color: "#2b5a6e", preview: "#8ec5d5" },
-  { id: "gear-hoodie", name: "Recovery Hoodie", cat: "gear", price: 550,  emoji: "🧥", limited: false, color: "#d8a857", preview: "#f5dc9a" },
-  { id: "env-cave",    name: "Ice Cave",        cat: "env",  price: 1100, emoji: "🏔️", limited: false, color: "#4a6a82", preview: "#a8c8d8" },
-  { id: "env-lab",     name: "Bio Lab",         cat: "env",  price: 900,  emoji: "🧪", limited: false, color: "#5a8a6e", preview: "#a8d4b8" },
-  { id: "env-summit",  name: "Alpine Summit",   cat: "env",  price: 1800, emoji: "⛰️", limited: true,  color: "#8a6a4a", preview: "#d8c4a8" },
-];
+/* Shop items — pulled from window.ACCESSORIES + window.BACKGROUNDS at runtime.
+   Categories: 'accessoire' (overlay) | 'background' (stage) | 'reward' (real-world). */
+function buildShopItems(){
+  const items = [];
+  const accs = window.ACCESSORIES || {};
+  for(const id in accs){
+    const a = accs[id];
+    items.push({
+      id, cat: "accessoire",
+      name: a.name, price: a.price ?? 500,
+      emoji: a.glyph || "✨",
+      limited: !!a.limited,
+      preview: "#e6ece8", color: "#1f3d2e",
+    });
+  }
+  const bgs = window.BACKGROUNDS || {};
+  for(const id in bgs){
+    const b = bgs[id];
+    items.push({
+      id, cat: "background",
+      name: b.name, price: b.price ?? 500,
+      emoji: "🖼️",
+      preview: b.colors ? b.colors[0] : "#e6ece8",
+      colors: b.colors,
+      limited: !!b.limited,
+      color: "#1f3d2e",
+    });
+  }
+  // Real-world rewards (future Shopify connection)
+  items.push({ id: "reward-discount10",  cat: "reward", name: "10 % Webshop-Code",     price: 800,  emoji: "🎁", limited: false, color: "#1f3d2e", preview: "#e6ece8" });
+  items.push({ id: "reward-session-free",cat: "reward", name: "Gratis Kältekammer",    price: 1500, emoji: "❄️", limited: false, color: "#1f3d2e", preview: "#e6ece8" });
+  items.push({ id: "reward-hoodie",      cat: "reward", name: "Freezeclub Hoodie",     price: 4500, emoji: "👕", limited: true,  color: "#1f3d2e", preview: "#e6ece8" });
+  return items;
+}
+const SHOP_ITEMS = buildShopItems();
 
 const ACHIEVEMENTS = [
   { id: "first-freeze", name: "First Freeze",  desc: "Erster Besuch",       icon: "❄", test: s => s.visits >= 1 },
@@ -83,7 +106,7 @@ const defaultState = () => ({
   lastVisitDate: null,
   level: 1,
   counts: {}, inventory: [],
-  equipped: { aura: null, gear: null, env: null },
+  equipped: { accessoire: null, background: null },
   challengeProgress: {}, unlockedAchievements: [],
   soundOn: true,
   avatar: window.defaultAvatar ? window.defaultAvatar() : null,
@@ -167,7 +190,17 @@ function renderAvatar(target, opts = {}){
   if(window.renderAvatarV2 && state.avatar){
     const level = opts.level || Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
     const stage = opts.stage || (window.stageFor ? window.stageFor(level) : null);
-    return window.renderAvatarV2(target, opts.avatar || state.avatar, { level, stage });
+    // inject equipped accessory if not explicitly provided
+    const avatarCopy = Object.assign({}, opts.avatar || state.avatar);
+    if(!avatarCopy.accessory && state.equipped) avatarCopy.accessory = state.equipped.accessoire || null;
+    window.renderAvatarV2(target, avatarCopy, { level, stage });
+    // Apply background to the parent stage (avatar-stage)
+    const stageEl = target.closest(".avatar-stage");
+    if(stageEl && window.applyAvatarBackground){
+      const bg = (state.equipped && state.equipped.background) || null;
+      window.applyAvatarBackground(stageEl, bg);
+    }
+    return;
   }
   return _renderAvatarLegacy(target, opts);
 }
@@ -519,72 +552,94 @@ function renderAvatarMeta(){
   }
 }
 
-/* ---------- Avatar Editor ---------- */
-const COLOR_PREVIEWS = {
-  blue:     "#cfe3ef",
-  mint:     "#c8e4dd",
-  lavender: "#dccfe2",
-  peach:    "#f5cdbf",
-};
-const LABEL_MAP = {
-  bodyColor: { blue: "Eisblau", mint: "Polarminze", lavender: "Aurora", peach: "Sonnenfrost" },
-  hair: { spiky: "Zacken", swoosh: "Welle", peaks: "Gipfel", flame: "Flamme" },
-  expression: { smile: "Lächeln", happy: "Fröhlich", sparkle: "Funkelnd", wink: "Zwinkern", sleepy: "Verträumt" },
-};
-
+/* ---------- Avatar Editor (Preset + Equip) ---------- */
 function renderEditor(){
   const wrap = $("#editorControls");
   if(!wrap || !state.avatar) return;
   const a = state.avatar;
-  const rows = window.PART_ORDER.map(key => {
-    const opts = window.AVATAR_PARTS[key];
-    const cur = a[key];
-    const idx = opts.indexOf(cur);
-    const display = (LABEL_MAP[key] && LABEL_MAP[key][cur]) || cur;
-    const valueDisplay = key === "bodyColor"
-      ? `<span class="swatch" style="background:${esc(COLOR_PREVIEWS[cur] || '#cfe3ef')}"></span><span>${esc(display)}</span>`
-      : `<span>${esc(display)}</span>`;
-    return `<div class="part-row">
-      <span class="part-row__label">${esc(window.PART_LABELS[key])}</span>
-      <div class="part-row__value">${valueDisplay}<div class="dim small" style="margin-top:2px">${idx+1} / ${opts.length}</div></div>
-      <div class="part-row__nav">
-        <button class="nav-btn" data-part="${esc(key)}" data-dir="-1">◀</button>
-        <button class="nav-btn" data-part="${esc(key)}" data-dir="1">▶</button>
+  const presets = window.PRESETS || {};
+  const equipped = state.equipped || {};
+
+  const presetCards = (window.PRESET_IDS || []).map(id => {
+    const p = presets[id];
+    const sel = id === a.preset;
+    return `<button class="preset-card ${sel?'is-selected':''}" data-preset="${esc(id)}">
+      <div class="preset-card__art" data-preset-art="${esc(id)}"></div>
+      <div class="preset-card__meta">
+        <span class="preset-card__name">${esc(p.label)}</span>
+        <span class="preset-card__desc">${esc(p.desc)}</span>
       </div>
-    </div>`;
+      ${sel ? '<span class="preset-card__check" aria-hidden="true">✓</span>' : ''}
+    </button>`;
   }).join("");
-  wrap.innerHTML = rows + `
-    <div class="editor__actions">
-      <button class="btn--randomize" id="randomizeBtn">Zufällig</button>
-      <button class="btn--save" id="saveAvatarBtn">Speichern</button>
-    </div>
+
+  const accId = equipped.accessoire;
+  const accInfo = accId && window.ACCESSORIES ? window.ACCESSORIES[accId] : null;
+  const bgId = equipped.background;
+  const bgInfo = bgId && window.BACKGROUNDS ? window.BACKGROUNDS[bgId] : null;
+
+  wrap.innerHTML = `
+    <section class="editor-section">
+      <h4 class="editor-section__title">Wähle deinen Frosti</h4>
+      <p class="editor-section__hint">Vier Persönlichkeiten zur Auswahl. Du kannst jederzeit wechseln.</p>
+      <div class="preset-grid">${presetCards}</div>
+    </section>
+
+    <section class="editor-section">
+      <h4 class="editor-section__title">Accessoire</h4>
+      <div class="equip-row ${accInfo?'is-equipped':''}">
+        <div class="equip-row__preview">${accInfo ? (accInfo.glyph || "✨") : "—"}</div>
+        <div class="equip-row__meta">
+          <span class="equip-row__name">${accInfo ? esc(accInfo.name) : "Nichts angelegt"}</span>
+          <span class="equip-row__sub">${accInfo ? "Wird über Frosti getragen" : "Im Shop entdecken"}</span>
+        </div>
+        ${accInfo
+          ? `<button class="equip-row__btn" data-unequip="accessoire">Ablegen</button>`
+          : `<button class="equip-row__btn" data-go="shop">Shop →</button>`}
+      </div>
+    </section>
+
+    <section class="editor-section">
+      <h4 class="editor-section__title">Hintergrund</h4>
+      <div class="equip-row ${bgInfo?'is-equipped':''}">
+        <div class="equip-row__preview equip-row__preview--bg" style="${bgInfo && bgInfo.colors ? `background:linear-gradient(135deg,${bgInfo.colors.join(',')});` : ''}">${bgInfo ? "" : "—"}</div>
+        <div class="equip-row__meta">
+          <span class="equip-row__name">${bgInfo ? esc(bgInfo.name) : "Standard"}</span>
+          <span class="equip-row__sub">${bgInfo ? "Aktive Szene" : "Im Shop entdecken"}</span>
+        </div>
+        ${bgInfo
+          ? `<button class="equip-row__btn" data-unequip="background">Ablegen</button>`
+          : `<button class="equip-row__btn" data-go="shop">Shop →</button>`}
+      </div>
+    </section>
   `;
-  window.renderAvatarV2($("#editorAvatar"), a);
+
+  // Render mini frosti in each preset card
+  (window.PRESET_IDS || []).forEach(id => {
+    const t = wrap.querySelector(`[data-preset-art="${id}"]`);
+    if(t) window.renderAvatarV2(t, { preset: id, accessory: null });
+  });
+
+  // Editor stage shows full equipped look
+  window.renderAvatarV2($("#editorAvatar"), Object.assign({}, a, { accessory: equipped.accessoire }));
+  const editorStage = $("#editorAvatar")?.closest(".avatar-stage");
+  if(editorStage && window.applyAvatarBackground) window.applyAvatarBackground(editorStage, equipped.background);
 }
 
-function cycleAvatarPart(key, dir){
-  const opts = window.AVATAR_PARTS[key];
-  if(!opts) return;
-  const cur = state.avatar[key];
-  let idx = opts.indexOf(cur);
-  if(idx < 0) idx = 0;
-  idx = (idx + dir + opts.length) % opts.length;
-  state.avatar[key] = opts[idx];
+function selectPreset(presetId){
+  if(!window.PRESETS || !window.PRESETS[presetId]) return;
+  state.avatar.preset = presetId;
   save();
   sfx("click");
   renderEditor();
   renderAvatar($("#avatarStage"));
 }
 
-function randomizeAvatar(){
-  const a = {};
-  for(const k of window.PART_ORDER){
-    const opts = window.AVATAR_PARTS[k];
-    a[k] = opts[Math.floor(Math.random()*opts.length)];
-  }
-  state.avatar = a;
+function unequipSlot(slot){
+  if(!state.equipped) return;
+  state.equipped[slot] = null;
   save();
-  sfx("buy");
+  sfx("click");
   renderEditor();
   renderAvatar($("#avatarStage"));
 }
@@ -624,7 +679,7 @@ function renderShop(filter = currentFilter){
     </article>`;
   }).join("");
 }
-function catLabel(c){ return { aura:"Aura", gear:"Gear", env:"Environment" }[c] || c }
+function catLabel(c){ return { accessoire:"Accessoires", background:"Hintergründe", reward:"Belohnungen" }[c] || c }
 
 /* ---------- Actions ---------- */
 function bookService(id, evtTarget){
@@ -714,7 +769,9 @@ function buyItem(id){
   if(!item || state.points < item.price || state.inventory.includes(id)) return;
   state.points -= item.price;
   state.inventory.push(id);
-  state.equipped[item.cat] = id;
+  // Auto-equip into the right slot
+  if(item.cat === "accessoire") state.equipped.accessoire = id;
+  else if(item.cat === "background") state.equipped.background = id;
   save();
   sfx("buy");
   showLootReveal(item);
@@ -725,7 +782,11 @@ function buyItem(id){
 function equipItem(id){
   const item = SHOP_ITEMS.find(i=>i.id===id);
   if(!item || !state.inventory.includes(id)) return;
-  state.equipped[item.cat] = state.equipped[item.cat] === id ? null : id;
+  if(item.cat === "accessoire"){
+    state.equipped.accessoire = state.equipped.accessoire === id ? null : id;
+  } else if(item.cat === "background"){
+    state.equipped.background = state.equipped.background === id ? null : id;
+  }
   save();
   sfx("click");
   renderAll();
@@ -870,8 +931,12 @@ function bindEvents(){
 
   document.addEventListener("click", (e) => {
     const part = e.target.closest("[data-part]");
-    if(part){ cycleAvatarPart(part.dataset.part, parseInt(part.dataset.dir,10)); return; }
-    if(e.target.id === "randomizeBtn"){ randomizeAvatar(); return; }
+    const presetCard = e.target.closest("[data-preset]");
+    if(presetCard){ selectPreset(presetCard.dataset.preset); return; }
+    const unequipBtn = e.target.closest("[data-unequip]");
+    if(unequipBtn){ unequipSlot(unequipBtn.dataset.unequip); return; }
+    if(part){ /* legacy noop */ return; }
+    if(e.target.id === "randomizeBtn"){ return; }
     if(e.target.id === "saveAvatarBtn"){ sfx("levelup"); toast("Avatar gespeichert"); return; }
     const svc = e.target.closest("[data-service]");
     if(svc){ bookService(svc.dataset.service, svc); return; }
@@ -928,10 +993,14 @@ function enterApp(){
 
 function boot(){
   bindEvents();
-  // Migrate older avatar schemas to v6 (fixed Frosti)
-  if(!state.avatar || !state.avatar.bodyColor || !state.avatar.hair || !state.avatar.expression
-     || !["blue","mint","lavender","peach"].includes(state.avatar.bodyColor)){
+  // Migrate to v7 preset-based avatar
+  if(!state.avatar || !state.avatar.preset || !(window.PRESETS || {})[state.avatar.preset]){
     state.avatar = window.defaultAvatar();
+    save();
+  }
+  // Ensure equipped slots match new schema
+  if(!state.equipped || (!("accessoire" in state.equipped) && !("background" in state.equipped))){
+    state.equipped = { accessoire: null, background: null };
     save();
   }
   // Migrate older daily-streak schema to weekly

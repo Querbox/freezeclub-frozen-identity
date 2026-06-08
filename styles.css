@@ -1623,7 +1623,122 @@ body::before{
 }
 .btn--cta:hover{ background: var(--brand-2) }
 
-/* ===== AVATAR EDITOR ===== */
+/* ===== AVATAR EDITOR (preset + equip) ===== */
+.editor-section{
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 22px;
+}
+.editor-section__title{
+  font-size: 14px; font-weight: 700; letter-spacing: -.015em;
+  color: var(--ink); margin: 0;
+}
+.editor-section__hint{
+  font-size: 12px; color: var(--ink-3); margin: 0 0 6px;
+  letter-spacing: -.005em;
+}
+
+/* Preset grid */
+.preset-grid{
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+}
+.preset-card{
+  appearance: none; cursor: pointer; font: inherit;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: all .2s ease;
+  position: relative;
+}
+.preset-card:hover{ border-color: var(--brand) }
+.preset-card.is-selected{
+  border-color: var(--brand); background: var(--brand-soft);
+}
+.preset-card__art{
+  width: 100%; aspect-ratio: 1/1;
+  background: var(--surface-2); border-radius: 10px;
+  display: grid; place-items: center; overflow: hidden;
+  padding: 6px;
+  position: relative;
+}
+.preset-card__meta{
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  text-align: center;
+}
+.preset-card__name{ font-weight: 700; font-size: 14px; color: var(--ink); letter-spacing: -.01em }
+.preset-card__desc{ font-size: 11px; color: var(--ink-3); letter-spacing: -.005em }
+.preset-card__check{
+  position: absolute; top: 8px; right: 8px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--brand); color: #fff;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+}
+
+/* Equip row */
+.equip-row{
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.equip-row.is-equipped{
+  background: var(--brand-soft); border-color: rgba(31,61,46,.15);
+}
+.equip-row__preview{
+  width: 46px; height: 46px; border-radius: 10px;
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  font-size: 22px; flex-shrink: 0;
+  color: var(--ink-3);
+  overflow: hidden;
+}
+.equip-row__preview--bg{ font-size: 0 }
+.equip-row__meta{ flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0 }
+.equip-row__name{ font-weight: 600; font-size: 14px; color: var(--ink); letter-spacing: -.01em }
+.equip-row__sub{ font-size: 11px; color: var(--ink-3); letter-spacing: -.005em }
+.equip-row__btn{
+  appearance: none; border: 0; cursor: pointer;
+  background: var(--brand); color: #fff;
+  padding: 8px 14px; border-radius: 8px;
+  font: inherit; font-size: 12px; font-weight: 600;
+  letter-spacing: -.005em;
+  flex-shrink: 0;
+  transition: background .2s ease;
+}
+.equip-row__btn:hover{ background: var(--brand-2) }
+.equip-row.is-equipped .equip-row__btn{
+  background: transparent; color: var(--ink-2);
+  border: 1px solid var(--line-2);
+}
+.equip-row.is-equipped .equip-row__btn:hover{ border-color: var(--ink); color: var(--ink) }
+
+/* Shop cat with label */
+.shop-cat{
+  flex-shrink: 0;
+  width: auto; height: 48px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line);
+  color: var(--ink-2); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0 14px;
+  font: inherit; font-size: 13px; font-weight: 600;
+  letter-spacing: -.005em;
+  transition: all .2s ease;
+}
+.shop-cat span{ display: inline }
+.shop-cat:hover{ color: var(--brand); border-color: var(--brand) }
+.shop-cat.is-active{
+  background: var(--brand); color: #fff; border-color: var(--brand);
+}
+
+/* Old generic editor (legacy) — hide if appears alongside new */
+.part-row{ display: none }
+.editor__actions{ display: none }
+
+/* ===== AVATAR EDITOR (legacy fallback) ===== */
 .editor{
   display:grid;
   grid-template-columns: 1fr 1.2fr;
