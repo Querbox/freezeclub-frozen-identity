@@ -1231,11 +1231,11 @@ function bindEvents(){
   let currentSlide = 0;
   const totalSlides = 5;
 
-  // Goal-tile selection inside slide 4
+  // Goal-tile selection inside slide 4 (new + legacy classes)
   document.addEventListener("click", (e) => {
     const goal = e.target.closest("[data-weekgoal]");
     if(!goal) return;
-    $$(".goal-tile").forEach(g => g.classList.remove("is-selected"));
+    $$(".onb-goal, .goal-tile").forEach(g => g.classList.remove("is-selected"));
     goal.classList.add("is-selected");
     sfx("click");
   });
@@ -1243,12 +1243,14 @@ function bindEvents(){
   function goToSlide(idx){
     idx = Math.max(0, Math.min(totalSlides - 1, idx));
     currentSlide = idx;
-    $$(".slide").forEach(s => s.classList.toggle("is-active", parseInt(s.dataset.step, 10) === idx));
-    $$(".onboarding__dots .dot").forEach((d, i) => d.classList.toggle("is-active", i === idx));
+    $$(".onb-slide, .slide").forEach(s => s.classList.toggle("is-active", parseInt(s.dataset.step, 10) === idx));
+    $$(".onb-dots .dot, .onboarding__dots .dot").forEach((d, i) => d.classList.toggle("is-active", i === idx));
     const back = $("#onboardingBack"); if(back) back.disabled = idx === 0;
     const next = $("#onboardingNext"); if(next){
       next.textContent = idx === totalSlides - 1 ? "Frosti aufwecken" : "Weiter";
     }
+    // scroll deck back to top on slide change
+    const deck = $("#onboardingDeck"); if(deck) deck.scrollTop = 0;
     sfx("click");
   }
 
@@ -1261,8 +1263,8 @@ function bindEvents(){
     }
     state.firstName = firstName;
     state.goal = $("#goal").value;
-    // Pick chosen week goal (default 2)
-    const chosenGoalEl = document.querySelector(".goal-tile.is-selected");
+    // Pick chosen week goal (default 2) — new + legacy classes
+    const chosenGoalEl = document.querySelector(".onb-goal.is-selected, .goal-tile.is-selected");
     if(chosenGoalEl){
       state.weekGoal = parseInt(chosenGoalEl.dataset.weekgoal, 10) || 2;
       state.weekGoalChosen = true;
@@ -1415,7 +1417,8 @@ function boot(){
     state.weekKey = currentWeek;
     save();
   }
-  window.renderAvatarV2($("#onboardingAvatar"), state.avatar);
+  const onbAv = $("#onboardingAvatar");
+  if(onbAv) window.renderAvatarV2(onbAv, state.avatar, { level: 1 });
   if(state.onboarded) enterApp();
 }
 

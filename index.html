@@ -16,138 +16,145 @@
 <body>
   <div class="app" id="app">
     <!-- Onboarding (slide-based intro) -->
-    <section class="screen onboarding" id="screen-onboarding">
-      <div class="onboarding__inner">
-        <div class="onboarding__topbar">
-          <div class="brand">
-            <div class="brand__mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3v18M5.5 6.5l13 11M18.5 6.5l-13 11M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </div>
-            <span class="brand__name">freezeclub</span>
+    <section class="onb" id="screen-onboarding">
+      <header class="onb-top">
+        <div class="brand">
+          <div class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 3v18M5.5 6.5l13 11M18.5 6.5l-13 11M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </div>
-          <button class="onboarding__skip" id="onboardingSkip" type="button">Überspringen</button>
+          <span class="brand__name">freezeclub</span>
         </div>
+        <button class="onb-skip" id="onboardingSkip" type="button">Überspringen</button>
+      </header>
 
-        <div class="onboarding__deck" id="onboardingDeck">
-          <!-- Slide 1: Welcome -->
-          <article class="slide is-active" data-step="0">
-            <span class="slide__badge">Willkommen</span>
-            <h1 class="display">Deine digitale<br/>Cryo-Identität.</h1>
-            <p class="lede">Frosti ist dein persönlicher Avatar im Freezeclub. Mit jedem realen Besuch wächst er sichtbar – von der Frostknospe bis zur Cryo-Legende.</p>
-            <ul class="slide__bullets">
-              <li><span class="bullet-icon">✻</span><span>Personalisierter Avatar, der sich mit dir entwickelt</span></li>
-              <li><span class="bullet-icon">✻</span><span>Saisonale Belohnungen und limitierte Items</span></li>
-              <li><span class="bullet-icon">✻</span><span>Tracking deiner Fortschritte und Streaks</span></li>
-            </ul>
-          </article>
-
-          <!-- Slide 2: Eis-Punkte -->
-          <article class="slide" data-step="1">
-            <span class="slide__badge">So funktioniert's</span>
-            <h1 class="display">Sammle<br/>Eis-Punkte.</h1>
-            <p class="lede">Jede Anwendung im Studio bringt dir Punkte. Punkte schalten Avatar-Stufen, Outfits und exklusive Belohnungen frei.</p>
-            <div class="slide__services">
-              <div class="onboard-service">
-                <span class="onboard-service__icon">❄</span>
-                <div>
-                  <div class="onboard-service__name">Kältekammer</div>
-                  <div class="onboard-service__meta">3 Min · −85 °C</div>
-                </div>
-                <span class="onboard-service__pts">+100</span>
-              </div>
-              <div class="onboard-service">
-                <span class="onboard-service__icon">≋</span>
-                <div>
-                  <div class="onboard-service__name">Lymphdrainage</div>
-                  <div class="onboard-service__meta">30 Min Regeneration</div>
-                </div>
-                <span class="onboard-service__pts">+75</span>
-              </div>
-              <div class="onboard-service">
-                <span class="onboard-service__icon">◉</span>
-                <div>
-                  <div class="onboard-service__name">4D-Bodyscan</div>
-                  <div class="onboard-service__meta">10 Min Tracking</div>
-                </div>
-                <span class="onboard-service__pts">+150</span>
-              </div>
+      <div class="onb-deck" id="onboardingDeck">
+        <!-- Slide 1: Welcome with big Frosti -->
+        <article class="onb-slide is-active" data-step="0">
+          <div class="onb-art onb-art--hero">
+            <div class="onb-art__bg onb-art__bg--blue"></div>
+            <div class="onb-art__sparkles">
+              <span style="--x:14%;--y:18%;--d:.2s">❄</span>
+              <span style="--x:82%;--y:24%;--d:.5s">✦</span>
+              <span style="--x:8%;--y:62%;--d:.8s">✺</span>
+              <span style="--x:88%;--y:70%;--d:1.1s">❄</span>
+              <span style="--x:50%;--y:8%;--d:.3s">✧</span>
             </div>
-          </article>
-
-          <!-- Slide 3: Wochen-Streak -->
-          <article class="slide" data-step="2">
-            <span class="slide__badge">Wochenziel</span>
-            <h1 class="display">2 Besuche<br/>pro Woche.</h1>
-            <p class="lede">Erreich dein wöchentliches Ziel und bau eine Streak auf. Sonntags ist der Freezeclub geschlossen – wird nicht mitgezählt.</p>
-            <div class="slide__weekpreview">
-              <div class="wk-day is-done"><span>Mo</span><span class="wk-dot">✓</span></div>
-              <div class="wk-day is-done"><span>Di</span><span class="wk-dot">✓</span></div>
-              <div class="wk-day is-today"><span>Mi</span><span class="wk-dot"></span></div>
-              <div class="wk-day"><span>Do</span><span class="wk-dot"></span></div>
-              <div class="wk-day"><span>Fr</span><span class="wk-dot"></span></div>
-              <div class="wk-day"><span>Sa</span><span class="wk-dot"></span></div>
-              <div class="wk-day is-closed"><span>So</span><span class="wk-dot">×</span></div>
-            </div>
-            <p class="slide__hint">+100 Bonus-Punkte sobald du dein Wochenziel erreichst.</p>
-          </article>
-
-          <!-- Slide 4: Persönliches Wochenziel -->
-          <article class="slide" data-step="3">
-            <span class="slide__badge">Dein Tempo</span>
-            <h1 class="display">Wie oft willst<br/>du kommen?</h1>
-            <p class="lede">Wähle ein realistisches Wochenziel. Du kannst es jederzeit ändern.</p>
-            <div class="goal-grid">
-              <button type="button" class="goal-tile" data-weekgoal="1"><span class="goal-tile__num">1×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Entspannt</span></button>
-              <button type="button" class="goal-tile is-selected" data-weekgoal="2"><span class="goal-tile__num">2×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Empfohlen</span></button>
-              <button type="button" class="goal-tile" data-weekgoal="3"><span class="goal-tile__num">3×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Ambitioniert</span></button>
-              <button type="button" class="goal-tile" data-weekgoal="4"><span class="goal-tile__num">4×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Elite</span></button>
-            </div>
-          </article>
-
-          <!-- Slide 5: Account erstellen -->
-          <article class="slide" data-step="4">
-            <span class="slide__badge">Letzter Schritt</span>
-            <h1 class="display">Frosti<br/>aufwecken.</h1>
-            <p class="lede">Wir starten dich mit <strong>200 Bonus-Eis-Punkten</strong> für deinen ersten Besuch.</p>
-            <form id="onboardingForm" class="form">
-              <label class="field">
-                <span class="field__label">Vorname</span>
-                <input type="text" id="firstName" required placeholder="z. B. Jana" autocomplete="given-name" />
-              </label>
-              <label class="field">
-                <span class="field__label">Dein Ziel</span>
-                <select id="goal" required>
-                  <option value="recovery">Recovery & Regeneration</option>
-                  <option value="performance">Performance</option>
-                  <option value="energy">Mehr Energie</option>
-                  <option value="sleep">Besserer Schlaf</option>
-                  <option value="longevity">Longevity</option>
-                </select>
-              </label>
-            </form>
-          </article>
-        </div>
-
-        <footer class="onboarding__footer">
-          <div class="onboarding__dots" id="onboardingDots">
-            <span class="dot is-active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+            <div class="onb-art__frosti" id="onboardingAvatar"></div>
           </div>
-          <div class="onboarding__buttons">
-            <button class="btn btn--ghost" id="onboardingBack" type="button" disabled>Zurück</button>
-            <button class="btn btn--primary" id="onboardingNext" type="button">Weiter</button>
+          <h1 class="onb-title">Hi, ich bin Frosti!</h1>
+          <p class="onb-text">Dein digitaler Begleiter im Freezeclub. Ich wachse mit jedem deiner Besuche – und du bekommst echte Rabatte zurück.</p>
+        </article>
+
+        <!-- Slide 2: Sammle Eis-Punkte → Rabatt -->
+        <article class="onb-slide" data-step="1">
+          <div class="onb-art onb-art--equation">
+            <div class="point-eq">
+              <div class="point-eq__chip point-eq__chip--blue">
+                <span class="point-eq__chip-num">100</span>
+                <span class="point-eq__chip-lbl">Eis-Punkte</span>
+              </div>
+              <div class="point-eq__op">=</div>
+              <div class="point-eq__chip point-eq__chip--gold">
+                <span class="point-eq__chip-num">1 €</span>
+                <span class="point-eq__chip-lbl">Rabatt</span>
+              </div>
+            </div>
+            <div class="point-eq__sub">direkt einlösbar bei Anwendungen & Webshop</div>
           </div>
-        </footer>
+          <h1 class="onb-title">Sammle Punkte,<br>spare echtes Geld.</h1>
+          <p class="onb-text">Bei jeder Anwendung sammelst du Eis-Punkte. Lös sie sofort gegen Rabatt ein – auf Kältekammer, Webshop oder Mitgliedschaft.</p>
+          <div class="onb-service-grid">
+            <div class="onb-svc"><span class="onb-svc__icon">❄</span><div><div class="onb-svc__name">Kältekammer</div><div class="onb-svc__pts">+100 Pkt</div></div></div>
+            <div class="onb-svc"><span class="onb-svc__icon">≋</span><div><div class="onb-svc__name">Lymphdrainage</div><div class="onb-svc__pts">+75 Pkt</div></div></div>
+            <div class="onb-svc"><span class="onb-svc__icon">◉</span><div><div class="onb-svc__name">4D-Bodyscan</div><div class="onb-svc__pts">+150 Pkt</div></div></div>
+          </div>
+        </article>
+
+        <!-- Slide 3: Frosti Evolution -->
+        <article class="onb-slide" data-step="2">
+          <div class="onb-art onb-art--evolution">
+            <div class="onb-art__bg onb-art__bg--mint"></div>
+            <div class="onb-evo">
+              <img class="onb-evo__frosti onb-evo__frosti--1" src="./assets/avatars/frost-1.png" alt="" draggable="false">
+              <img class="onb-evo__frosti onb-evo__frosti--2" src="./assets/avatars/frost-2.png" alt="" draggable="false">
+              <img class="onb-evo__frosti onb-evo__frosti--3" src="./assets/avatars/frost-3.png" alt="" draggable="false">
+              <img class="onb-evo__frosti onb-evo__frosti--4" src="./assets/avatars/frost-4.png" alt="" draggable="false">
+              <img class="onb-evo__frosti onb-evo__frosti--5" src="./assets/avatars/frost-5.png" alt="" draggable="false">
+            </div>
+          </div>
+          <h1 class="onb-title">Frosti wächst mit dir.</h1>
+          <p class="onb-text">Jede Stufe gibt eine neue Krone, neue Items und exklusive Saison-Belohnungen. Vom kleinen Frostknospe bis zum Polarchampion.</p>
+        </article>
+
+        <!-- Slide 4: Wochenziel -->
+        <article class="onb-slide" data-step="3">
+          <div class="onb-art onb-art--week">
+            <div class="onb-week">
+              <div class="onb-week__day is-done"><span>Mo</span><div class="onb-week__dot">✓</div></div>
+              <div class="onb-week__day is-done"><span>Di</span><div class="onb-week__dot">✓</div></div>
+              <div class="onb-week__day is-today"><span>Mi</span><div class="onb-week__dot"></div></div>
+              <div class="onb-week__day"><span>Do</span><div class="onb-week__dot"></div></div>
+              <div class="onb-week__day"><span>Fr</span><div class="onb-week__dot"></div></div>
+              <div class="onb-week__day"><span>Sa</span><div class="onb-week__dot"></div></div>
+              <div class="onb-week__day is-closed"><span>So</span><div class="onb-week__dot">−</div></div>
+            </div>
+          </div>
+          <h1 class="onb-title">Dein Tempo,<br>deine Regeln.</h1>
+          <p class="onb-text">Wie oft willst du im Freezeclub vorbeikommen? Wähle dein realistisches Wochenziel.</p>
+          <div class="onb-goals">
+            <button type="button" class="onb-goal" data-weekgoal="1"><span class="onb-goal__num">1×</span><span class="onb-goal__lbl">Entspannt</span></button>
+            <button type="button" class="onb-goal is-selected" data-weekgoal="2"><span class="onb-goal__num">2×</span><span class="onb-goal__lbl">Empfohlen</span></button>
+            <button type="button" class="onb-goal" data-weekgoal="3"><span class="onb-goal__num">3×</span><span class="onb-goal__lbl">Ambitioniert</span></button>
+            <button type="button" class="onb-goal" data-weekgoal="4"><span class="onb-goal__num">4×</span><span class="onb-goal__lbl">Elite</span></button>
+          </div>
+          <p class="onb-hint">Sonntags ist geschlossen — wird nicht mitgezählt. +100 Pkt Bonus, sobald du dein Ziel erreichst.</p>
+        </article>
+
+        <!-- Slide 5: Account erstellen -->
+        <article class="onb-slide" data-step="4">
+          <div class="onb-art onb-art--final">
+            <div class="onb-art__bg onb-art__bg--peach"></div>
+            <div class="onb-bonus">
+              <div class="onb-bonus__num">+200</div>
+              <div class="onb-bonus__lbl">Eis-Punkte Willkommensbonus</div>
+            </div>
+          </div>
+          <h1 class="onb-title">Fast geschafft!</h1>
+          <p class="onb-text">Sag uns nur kurz, wer du bist – und Frosti ist bereit.</p>
+          <form id="onboardingForm" class="onb-form">
+            <label class="onb-field">
+              <span class="onb-field__lbl">Vorname</span>
+              <input type="text" id="firstName" required placeholder="z. B. Jana" autocomplete="given-name" />
+            </label>
+            <label class="onb-field">
+              <span class="onb-field__lbl">Was ist dein Ziel?</span>
+              <select id="goal" required>
+                <option value="recovery">Recovery & Regeneration</option>
+                <option value="performance">Performance steigern</option>
+                <option value="energy">Mehr Energie</option>
+                <option value="sleep">Besser schlafen</option>
+                <option value="longevity">Longevity</option>
+              </select>
+            </label>
+          </form>
+        </article>
       </div>
 
-      <aside class="onboarding__visual" aria-hidden="true">
-        <div class="onboarding__visual-inner">
-          <div class="hero-card__avatar" id="onboardingAvatar"></div>
+      <footer class="onb-bottom">
+        <div class="onb-dots" id="onboardingDots">
+          <span class="dot is-active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
-      </aside>
+        <div class="onb-actions">
+          <button class="onb-btn onb-btn--back" id="onboardingBack" type="button" disabled aria-label="Zurück">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="onb-btn onb-btn--next" id="onboardingNext" type="button">Weiter</button>
+        </div>
+      </footer>
     </section>
 
     <!-- Main app -->

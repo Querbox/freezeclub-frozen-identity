@@ -110,7 +110,357 @@ body::before{
 .brand--sm .brand__mark{width:30px;height:30px;border-radius:8px}
 .brand--sm .brand__name{font-size:15px}
 
-/* ===== ONBOARDING ===== */
+/* ===== ONBOARDING v2 — visual, fixed bottom buttons ===== */
+.onb{
+  position: fixed; inset: 0;
+  background: var(--bg-0);
+  display: flex; flex-direction: column;
+  z-index: 200;
+  overflow: hidden;
+}
+.onb-top{
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(env(safe-area-inset-top) + 14px) 22px 12px;
+  flex-shrink: 0;
+}
+.onb-top .brand__name{ font-size: 16px }
+.onb-skip{
+  appearance: none; border: 0; background: transparent;
+  font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--ink-3); cursor: pointer;
+  padding: 8px 12px; border-radius: 8px;
+  transition: color .2s ease;
+}
+.onb-skip:hover{ color: var(--ink) }
+
+.onb-deck{
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 22px 24px;
+}
+.onb-slide{
+  display: none;
+  flex-direction: column;
+  min-height: 100%;
+  animation: onbIn .45s cubic-bezier(.2,.7,.2,1);
+}
+.onb-slide.is-active{ display: flex }
+@keyframes onbIn{
+  from{ opacity: 0; transform: translateY(14px) }
+  to  { opacity: 1; transform: none }
+}
+
+/* Hero art container at top of each slide */
+.onb-art{
+  position: relative;
+  aspect-ratio: 1/1;
+  max-height: 38vh;
+  margin: 8px auto 24px;
+  width: 100%; max-width: 360px;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.onb-art__bg{
+  position: absolute; inset: 0; z-index: 0;
+}
+.onb-art__bg--blue{
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 35%, #ffffff 0%, transparent 60%),
+    linear-gradient(160deg, #d8eaf6 0%, #b8d8e6 100%);
+}
+.onb-art__bg--mint{
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 35%, #ffffff 0%, transparent 60%),
+    linear-gradient(160deg, #d4eee5 0%, #b8e0d0 100%);
+}
+.onb-art__bg--peach{
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 35%, #ffffff 0%, transparent 60%),
+    linear-gradient(160deg, #fae0d0 0%, #f5cdbf 100%);
+}
+
+/* Sparkles around hero Frosti */
+.onb-art__sparkles{ position: absolute; inset: 0; z-index: 1; pointer-events: none }
+.onb-art__sparkles span{
+  position: absolute;
+  left: var(--x); top: var(--y);
+  font-size: 18px; color: rgba(255,255,255,.95);
+  animation: sparkleFloat 3s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.1));
+}
+@keyframes sparkleFloat{
+  0%,100%{ transform: translateY(0) scale(1); opacity: .8 }
+  50%   { transform: translateY(-8px) scale(1.15); opacity: 1 }
+}
+
+/* Big Frosti on welcome slide */
+.onb-art__frosti{
+  position: relative; z-index: 2;
+  width: 78%; height: 78%;
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: bounce 3s cubic-bezier(.5,0,.5,1) infinite;
+}
+
+/* Slide title + text */
+.onb-title{
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(28px, 5.5vw, 36px);
+  letter-spacing: -.025em;
+  line-height: 1.1;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.onb-text{
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin: 0 0 20px;
+  max-width: 420px;
+}
+
+/* Slide 2: 100 Pkt = 1 € equation */
+.onb-art--equation{
+  background: linear-gradient(160deg, #f4faff 0%, #e0eef9 100%);
+  padding: 24px;
+}
+.point-eq{
+  display: flex; align-items: center; gap: 14px;
+  flex: 1; justify-content: center;
+  position: relative; z-index: 2;
+}
+.point-eq__chip{
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 18px 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  box-shadow: 0 6px 16px rgba(20,40,30,.08);
+  min-width: 96px;
+}
+.point-eq__chip-num{
+  font-size: 28px; font-weight: 800;
+  letter-spacing: -.03em; line-height: 1;
+}
+.point-eq__chip--blue .point-eq__chip-num{ color: var(--brand) }
+.point-eq__chip--gold .point-eq__chip-num{ color: #c89a48 }
+.point-eq__chip-lbl{ font-size: 11px; color: var(--ink-3); font-weight: 600 }
+.point-eq__op{
+  font-size: 28px; font-weight: 700; color: var(--ink-2);
+  letter-spacing: -.02em;
+}
+.point-eq__sub{
+  position: absolute; bottom: 18px; left: 0; right: 0;
+  text-align: center;
+  font-size: 12px; color: var(--ink-3);
+  font-weight: 500;
+}
+
+/* Slide 2: service grid */
+.onb-service-grid{
+  display: flex; flex-direction: column; gap: 8px;
+}
+.onb-svc{
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.onb-svc__icon{
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--brand-soft); color: var(--brand);
+  display: grid; place-items: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.onb-svc__name{ font-weight: 700; font-size: 14px; color: var(--ink); letter-spacing: -.01em }
+.onb-svc__pts{ font-size: 12px; color: var(--brand); font-weight: 700 }
+
+/* Slide 3: Evolution strip with overlapping Frostis */
+.onb-evo{
+  position: relative; z-index: 2;
+  width: 100%; height: 100%;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0 8px;
+}
+.onb-evo__frosti{
+  width: 18%; height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(20,40,30,.15));
+  animation: evoPop .5s ease backwards;
+}
+.onb-evo__frosti--1{ animation-delay: .1s; opacity: .65; transform: scale(.85) }
+.onb-evo__frosti--2{ animation-delay: .25s; opacity: .75; transform: scale(.9) }
+.onb-evo__frosti--3{ animation-delay: .4s; opacity: .85; transform: scale(.95) }
+.onb-evo__frosti--4{ animation-delay: .55s; opacity: 1; transform: scale(1) }
+.onb-evo__frosti--5{ animation-delay: .7s; opacity: 1; transform: scale(1.05) }
+@keyframes evoPop{
+  from{ opacity: 0; transform: translateY(10px) scale(.7) }
+}
+
+/* Slide 4: Week tracker visual */
+.onb-art--week{
+  background: linear-gradient(160deg, #f4faff 0%, #e0eef9 100%);
+  padding: 18px;
+}
+.onb-week{
+  position: relative; z-index: 2;
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 6px; width: 100%;
+}
+.onb-week__day{
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 10px 4px;
+  background: var(--surface);
+  border-radius: 10px;
+}
+.onb-week__day > span{
+  font-size: 11px; font-weight: 700; color: var(--ink-3);
+}
+.onb-week__dot{
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+  color: transparent;
+}
+.onb-week__day.is-done .onb-week__dot{
+  background: var(--brand); color: #fff;
+}
+.onb-week__day.is-today{
+  background: #fff;
+  outline: 2px solid var(--brand);
+}
+.onb-week__day.is-closed{ opacity: .55 }
+.onb-week__day.is-closed .onb-week__dot{ color: var(--ink-3) }
+
+/* Slide 4: Goal grid */
+.onb-goals{
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  margin-bottom: 12px;
+}
+.onb-goal{
+  appearance: none; cursor: pointer; font: inherit;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: all .2s ease;
+}
+.onb-goal:hover{ border-color: var(--brand) }
+.onb-goal.is-selected{
+  border-color: var(--brand); background: var(--brand-soft);
+}
+.onb-goal__num{
+  font-size: 28px; font-weight: 800; color: var(--brand);
+  letter-spacing: -.025em; line-height: 1;
+}
+.onb-goal__lbl{ font-size: 12px; font-weight: 700; color: var(--ink); letter-spacing: -.005em }
+.onb-hint{
+  font-size: 12px; color: var(--ink-3);
+  text-align: center; line-height: 1.5;
+  margin: 0;
+}
+
+/* Slide 5: Final */
+.onb-art--final{ background: linear-gradient(160deg, #fae0d0 0%, #f5cdbf 100%) }
+.onb-bonus{
+  position: relative; z-index: 2;
+  text-align: center;
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 24px 32px;
+  box-shadow: 0 8px 24px rgba(20,40,30,.12);
+}
+.onb-bonus__num{
+  font-family: var(--sans);
+  font-size: 56px; font-weight: 800;
+  color: var(--brand);
+  letter-spacing: -.04em; line-height: 1;
+}
+.onb-bonus__lbl{
+  font-size: 13px; font-weight: 700; color: var(--ink);
+  margin-top: 4px;
+}
+.onb-form{
+  display: flex; flex-direction: column; gap: 14px;
+}
+.onb-field{ display: flex; flex-direction: column; gap: 6px }
+.onb-field__lbl{
+  font-size: 12px; font-weight: 700; color: var(--ink);
+  letter-spacing: -.005em;
+}
+.onb-field input, .onb-field select{
+  appearance: none; -webkit-appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px; padding: 14px 16px;
+  font: inherit; color: var(--ink);
+  font-size: 16px;
+  transition: border-color .2s ease;
+}
+.onb-field input:focus, .onb-field select:focus{
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(31,61,46,.10);
+}
+
+/* Bottom fixed actions */
+.onb-bottom{
+  flex-shrink: 0;
+  background: var(--bg-0);
+  padding: 14px 22px calc(env(safe-area-inset-bottom) + 14px);
+  display: flex; flex-direction: column; gap: 12px;
+  border-top: 1px solid var(--line);
+  position: relative;
+  z-index: 20;
+}
+.onb-dots{
+  display: flex; gap: 8px; justify-content: center; align-items: center;
+}
+.onb-dots .dot{
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--line-2);
+  transition: all .25s ease;
+}
+.onb-dots .dot.is-active{
+  background: var(--brand);
+  width: 22px; border-radius: 4px;
+}
+.onb-actions{ display: flex; gap: 10px }
+.onb-btn{
+  appearance: none; border: 0; cursor: pointer;
+  font: inherit; font-weight: 700;
+  border-radius: 14px;
+  padding: 16px 22px;
+  transition: all .2s ease;
+  letter-spacing: -.005em;
+  touch-action: manipulation;
+}
+.onb-btn--back{
+  flex: 0 0 56px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  display: grid; place-items: center;
+  padding: 0;
+}
+.onb-btn--back[disabled]{ opacity: .3; pointer-events: none }
+.onb-btn--next{
+  flex: 1;
+  background: var(--brand); color: #fff;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(31,61,46,.18);
+}
+.onb-btn--next:hover, .onb-btn--next:active{
+  background: var(--brand-2);
+}
+
+/* ===== ONBOARDING (LEGACY — kept for fallback) ===== */
 .onboarding{
   min-height:100vh; display:grid;
   grid-template-columns: 1.1fr 1fr; gap:0;
