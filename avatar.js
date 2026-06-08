@@ -75,7 +75,7 @@ function _shade(hex, amt){
   return "#" + ((r<<16)|(g<<8)|b).toString(16).padStart(6,"0");
 }
 
-/* ---- Hair shapes per style ---- */
+/* ---- Hair: original (level-1 fallback) per style ---- */
 function hair(style, outline){
   if(style === "spiky"){
     return `<path d="M55,72 L62,42 L70,72 L78,38 L86,72 L96,32 L104,72 L114,38 L122,72 L132,42 L140,72 Z" fill="${outline}" opacity=".12"/>
@@ -95,6 +95,112 @@ function hair(style, outline){
             <path d="M62,72 L68,26 L78,68 L84,18 L94,66 L100,12 L106,66 L116,18 L122,68 L132,26 L138,72" fill="none" stroke="${outline}" stroke-width="1.6" stroke-linejoin="round" opacity=".85"/>`;
   }
   return "";
+}
+
+/* ===== EVOLUTION CROWNS — change per level ===== */
+/* Each preset has its own evolution path. Returns SVG fragment to render above the head. */
+
+/* --- FROST (blue) — matching the 4 reference images --- */
+function frostCrown(level, outline){
+  // L1: smooth soft peaks (mountain range)
+  if(level <= 1){
+    return `<path d="M44,78 Q56,40 66,74 Q78,36 88,72 Q100,30 112,72 Q122,36 134,74 Q144,40 156,78 L156,80 L44,80 Z"
+                  fill="#e8f3fa" stroke="${outline}" stroke-width="1.6" stroke-linejoin="round" opacity=".9"/>
+            <path d="M52,58 Q62,68 72,58" fill="none" stroke="${outline}" stroke-width=".7" opacity=".45"/>
+            <path d="M84,52 Q94,64 104,52" fill="none" stroke="${outline}" stroke-width=".7" opacity=".45"/>
+            <path d="M116,58 Q126,68 136,58" fill="none" stroke="${outline}" stroke-width=".7" opacity=".45"/>`;
+  }
+  // L2: sharp crystal spikes
+  if(level === 2){
+    return `<path d="M46,78 L56,32 L66,74 L76,30 L86,72 L100,16 L114,72 L124,30 L134,74 L144,32 L154,78 Z"
+                  fill="#e8f3fa" stroke="${outline}" stroke-width="1.6" stroke-linejoin="round"/>
+            <line x1="56" y1="32" x2="56" y2="74" stroke="${outline}" stroke-width=".5" opacity=".4"/>
+            <line x1="76" y1="30" x2="76" y2="72" stroke="${outline}" stroke-width=".5" opacity=".4"/>
+            <line x1="100" y1="16" x2="100" y2="72" stroke="${outline}" stroke-width=".6" opacity=".5"/>
+            <line x1="124" y1="30" x2="124" y2="72" stroke="${outline}" stroke-width=".5" opacity=".4"/>
+            <line x1="144" y1="32" x2="144" y2="74" stroke="${outline}" stroke-width=".5" opacity=".4"/>`;
+  }
+  // L3: crystal crown with central star
+  if(level === 3){
+    return `<!-- Outer side crystals -->
+            <path d="M58,78 L66,52 L74,76 Z" fill="#e8f3fa" stroke="${outline}" stroke-width="1.4"/>
+            <path d="M126,76 L134,52 L142,78 Z" fill="#e8f3fa" stroke="${outline}" stroke-width="1.4"/>
+            <!-- Inner side crystals -->
+            <path d="M72,76 L82,40 L92,76 Z" fill="#e8f3fa" stroke="${outline}" stroke-width="1.5"/>
+            <path d="M108,76 L118,40 L128,76 Z" fill="#e8f3fa" stroke="${outline}" stroke-width="1.5"/>
+            <!-- Central tallest crystal -->
+            <path d="M88,76 L100,18 L112,76 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.5"/>
+            <line x1="100" y1="18" x2="100" y2="76" stroke="${outline}" stroke-width=".5" opacity=".4"/>
+            <!-- Sparkle in center -->
+            <g transform="translate(100, 56)">
+              <path d="M0,-6.5 L1.6,-1.6 L6.5,0 L1.6,1.6 L0,6.5 L-1.6,1.6 L-6.5,0 L-1.6,-1.6 Z"
+                    fill="#fff" stroke="${outline}" stroke-width=".7"/>
+            </g>`;
+  }
+  // L4+: full royal ice crown with star + pearls
+  return `<!-- Crown base band -->
+          <path d="M32,86 Q100,73 168,86 L166,94 Q100,83 34,94 Z"
+                fill="#e8f3fa" stroke="${outline}" stroke-width="1.4"/>
+          <!-- Edge curls -->
+          <path d="M32,86 Q22,70 30,56 L36,72 Q34,78 32,86" fill="#e8f3fa" stroke="${outline}" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M168,86 Q178,70 170,56 L164,72 Q166,78 168,86" fill="#e8f3fa" stroke="${outline}" stroke-width="1.4" stroke-linejoin="round"/>
+          <!-- Pearls on band -->
+          <circle cx="40" cy="87" r="3" fill="#fff" stroke="${outline}" stroke-width=".9"/>
+          <circle cx="160" cy="87" r="3" fill="#fff" stroke="${outline}" stroke-width=".9"/>
+          <circle cx="64" cy="85" r="1.8" fill="#fff" stroke="${outline}" stroke-width=".7"/>
+          <circle cx="136" cy="85" r="1.8" fill="#fff" stroke="${outline}" stroke-width=".7"/>
+          <!-- Side small crystals -->
+          <path d="M50,80 L56,52 L64,80 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.1"/>
+          <path d="M68,80 L78,40 L88,80 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.2"/>
+          <path d="M112,80 L122,40 L132,80 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.2"/>
+          <path d="M136,80 L144,52 L150,80 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.1"/>
+          <!-- Central tallest crystal -->
+          <path d="M86,80 L100,18 L114,80 Z" fill="#ffffff" stroke="${outline}" stroke-width="1.4"/>
+          <line x1="100" y1="18" x2="100" y2="80" stroke="${outline}" stroke-width=".5" opacity=".4"/>
+          <!-- Big star center -->
+          <g transform="translate(100, 52)">
+            <path d="M0,-12 L2.6,-2.6 L12,0 L2.6,2.6 L0,12 L-2.6,2.6 L-12,0 L-2.6,-2.6 Z"
+                  fill="#fff" stroke="${outline}" stroke-width="1"/>
+            <circle cx="0" cy="0" r="2.4" fill="${outline}" opacity=".5"/>
+          </g>`;
+}
+
+/* --- Generic evolution for other presets (uses base style, slight scale per level) --- */
+function genericCrown(style, level, outline){
+  const base = hair(style, outline);
+  if(level <= 1) return base;
+  // From L2: add 2 small accent crystals beside head
+  let accent = "";
+  if(level >= 2){
+    accent += `<path d="M28,76 L34,58 L40,76 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.1" opacity=".85"/>
+               <path d="M160,76 L166,58 L172,76 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.1" opacity=".85"/>`;
+  }
+  if(level >= 3){
+    // Add sparkle
+    accent += `<g transform="translate(100, 36)">
+                 <path d="M0,-5 L1.3,-1.3 L5,0 L1.3,1.3 L0,5 L-1.3,1.3 L-5,0 L-1.3,-1.3 Z" fill="#fff" stroke="${outline}" stroke-width=".5"/>
+               </g>`;
+  }
+  if(level >= 4){
+    // Add band beneath
+    accent += `<path d="M40,82 Q100,76 160,82 L158,86 Q100,80 42,86 Z" fill="#f4faff" stroke="${outline}" stroke-width="1.1" opacity=".9"/>
+               <circle cx="50" cy="83" r="2" fill="#fff" stroke="${outline}" stroke-width=".7"/>
+               <circle cx="150" cy="83" r="2" fill="#fff" stroke="${outline}" stroke-width=".7"/>`;
+  }
+  return base + accent;
+}
+
+function hairForLevel(presetId, level, outline){
+  if(presetId === "frost") return frostCrown(level, outline);
+  const preset = PRESETS[presetId] || PRESETS.frost;
+  return genericCrown(preset.hair, level, outline);
+}
+
+/* Subtle eyebrows that appear at level >= 2 */
+function browsForLevel(level){
+  if(level <= 1) return "";
+  return `<path d="M67,102 Q77,99 87,102" fill="none" stroke="#0e1b35" stroke-width="1.3" stroke-linecap="round" opacity=".72"/>
+          <path d="M113,102 Q123,99 133,102" fill="none" stroke="#0e1b35" stroke-width="1.3" stroke-linecap="round" opacity=".72"/>`;
 }
 
 /* ---- Expression (eyes + mouth + cheeks) ---- */
@@ -207,7 +313,8 @@ function composeAvatarSVG(presetId, opts){
             fill="url(#${bodyGradId})" stroke="${palette.outline}" stroke-width="${2/scale}"/>
       <ellipse cx="64" cy="86" rx="22" ry="14" fill="#ffffff" opacity=".7"/>
       <ellipse cx="58" cy="78" rx="8" ry="5" fill="#ffffff" opacity=".95"/>
-      ${hair(preset.hair, palette.outline)}
+      ${hairForLevel(presetId, level, palette.outline)}
+      ${browsForLevel(level)}
       ${expression(preset.expression, palette)}
     </g>
   </svg>`;
@@ -243,12 +350,28 @@ function defaultAvatar(){
   return { preset: "frost", accessory: null, background: null };
 }
 
+/* Stage info — name + (subtle) scale per level. Crown evolves via hairForLevel. */
+const STAGE_INFO = [
+  { id: 1, name: "Frostknospe",     scale: 0.92 },
+  { id: 2, name: "Eiskeim",         scale: 0.95 },
+  { id: 3, name: "Kristallwächter", scale: 0.98 },
+  { id: 4, name: "Eismeister",      scale: 1.00 },
+  { id: 5, name: "Polarchampion",   scale: 1.00 },
+];
+
+function stageFor(level){
+  const idx = Math.max(0, Math.min(STAGE_INFO.length - 1, (level || 1) - 1));
+  return STAGE_INFO[idx];
+}
+
 const PRESET_IDS = Object.keys(PRESETS);
 
 window.PRESETS = PRESETS;
 window.PRESET_IDS = PRESET_IDS;
 window.ACCESSORIES = ACCESSORIES;
 window.BACKGROUNDS = BACKGROUNDS;
+window.STAGE_INFO = STAGE_INFO;
+window.stageFor = stageFor;
 window.defaultAvatar = defaultAvatar;
 window.renderAvatarV2 = renderAvatarV2;
 window.applyAvatarBackground = applyAvatarBackground;
