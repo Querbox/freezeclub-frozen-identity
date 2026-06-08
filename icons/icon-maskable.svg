@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dceffa"/>
+      <stop offset=".55" stop-color="#bbdaee"/>
+      <stop offset="1" stop-color="#8fb8d4"/>
+    </linearGradient>
+    <radialGradient id="frosti" cx="42%" cy="32%" r="68%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".55" stop-color="#eef6fc"/>
+      <stop offset="1" stop-color="#bcd5e8"/>
+    </radialGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#cce4ef" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#cce4ef" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- Frosti scaled to ~70% of canvas (safe zone padding for adaptive icons) -->
+  <g transform="translate(256 280) scale(.72) translate(-256 -280)">
+    <!-- Ground shadow -->
+    <ellipse cx="256" cy="430" rx="140" ry="14" fill="#000" opacity=".18"/>
+    <!-- Crown spikes -->
+    <g stroke="#7faecf" stroke-width="5" stroke-linejoin="round" fill="#eef6fc">
+      <path d="M148 196 l16 -78 l18 80 z"/>
+      <path d="M188 192 l20 -100 l22 102 z"/>
+      <path d="M230 188 l26 -118 l26 118 z"/>
+      <path d="M282 192 l20 -100 l22 100 z"/>
+      <path d="M324 196 l18 -82 l16 80 z"/>
+    </g>
+    <!-- Body -->
+    <path d="M256 158 C 358 158, 432 232, 432 332 C 432 432, 364 478, 256 478 C 148 478, 80 432, 80 332 C 80 232, 154 158, 256 158 Z"
+          fill="url(#frosti)" stroke="#7faecf" stroke-width="6"/>
+    <ellipse cx="170" cy="240" rx="58" ry="32" fill="#ffffff" opacity=".75"/>
+    <ellipse cx="160" cy="216" rx="22" ry="14" fill="#ffffff"/>
+    <ellipse cx="118" cy="350" rx="32" ry="18" fill="url(#cheek)"/>
+    <ellipse cx="394" cy="350" rx="32" ry="18" fill="url(#cheek)"/>
+    <ellipse cx="196" cy="330" rx="18" ry="20" fill="#0e1b35"/>
+    <ellipse cx="316" cy="330" rx="18" ry="20" fill="#0e1b35"/>
+    <circle cx="190" cy="322" r="5.5" fill="#ffffff"/>
+    <circle cx="310" cy="322" r="5.5" fill="#ffffff"/>
+    <path d="M214 386 Q256 412 298 386" stroke="#0e1b35" stroke-width="9" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dceffa"/>
+      <stop offset=".55" stop-color="#bbdaee"/>
+      <stop offset="1" stop-color="#8fb8d4"/>
+    </linearGradient>
+    <radialGradient id="frosti" cx="42%" cy="32%" r="68%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".55" stop-color="#eef6fc"/>
+      <stop offset="1" stop-color="#bcd5e8"/>
+    </radialGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#cce4ef" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#cce4ef" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="60%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Solid square background (iOS adds rounded corners automatically) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Soft center light -->
+  <ellipse cx="256" cy="320" rx="220" ry="180" fill="url(#glow)"/>
+
+  <!-- Sparkles (4-point stars) -->
+  <g fill="#ffffff" opacity=".85">
+    <path d="M88 96 l5 14 l14 5 l-14 5 l-5 14 l-5 -14 l-14 -5 l14 -5 z"/>
+    <path d="M432 116 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 z" opacity=".8"/>
+    <path d="M70 380 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3 z" opacity=".7"/>
+    <path d="M444 360 l4 12 l12 4 l-12 4 l-4 12 l-4 -12 l-12 -4 l12 -4 z" opacity=".85"/>
+    <path d="M260 60 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 l9 -3 z" opacity=".6"/>
+  </g>
+
+  <!-- Ground shadow -->
+  <ellipse cx="256" cy="430" rx="140" ry="14" fill="#000" opacity=".18"/>
+
+  <!-- Crown (ice spikes on top) -->
+  <g stroke="#7faecf" stroke-width="5" stroke-linejoin="round" fill="#eef6fc">
+    <path d="M148 196 l16 -78 l18 80 z"/>
+    <path d="M188 192 l20 -100 l22 102 z"/>
+    <path d="M230 188 l26 -118 l26 118 z"/>
+    <path d="M282 192 l20 -100 l22 100 z"/>
+    <path d="M324 196 l18 -82 l16 80 z"/>
+  </g>
+  <!-- Spike highlights -->
+  <g stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".55">
+    <line x1="166" y1="130" x2="166" y2="186"/>
+    <line x1="200" y1="110" x2="200" y2="186"/>
+    <line x1="256" y1="86" x2="256" y2="186"/>
+    <line x1="298" y1="110" x2="298" y2="186"/>
+    <line x1="338" y1="130" x2="338" y2="186"/>
+  </g>
+
+  <!-- Frosti body (round/egg-shape) -->
+  <path d="M256 158
+           C 358 158, 432 232, 432 332
+           C 432 432, 364 478, 256 478
+           C 148 478, 80 432, 80 332
+           C 80 232, 154 158, 256 158 Z"
+        fill="url(#frosti)" stroke="#7faecf" stroke-width="6"/>
+
+  <!-- Highlight on body -->
+  <ellipse cx="170" cy="240" rx="58" ry="32" fill="#ffffff" opacity=".75"/>
+  <ellipse cx="160" cy="216" rx="22" ry="14" fill="#ffffff"/>
+
+  <!-- Cheeks -->
+  <ellipse cx="118" cy="350" rx="32" ry="18" fill="url(#cheek)"/>
+  <ellipse cx="394" cy="350" rx="32" ry="18" fill="url(#cheek)"/>
+
+  <!-- Eyes -->
+  <ellipse cx="196" cy="330" rx="18" ry="20" fill="#0e1b35"/>
+  <ellipse cx="316" cy="330" rx="18" ry="20" fill="#0e1b35"/>
+  <!-- Eye sparkles -->
+  <circle cx="190" cy="322" r="5.5" fill="#ffffff"/>
+  <circle cx="310" cy="322" r="5.5" fill="#ffffff"/>
+  <circle cx="202" cy="338" r="2.5" fill="#ffffff" opacity=".7"/>
+  <circle cx="322" cy="338" r="2.5" fill="#ffffff" opacity=".7"/>
+
+  <!-- Smile -->
+  <path d="M214 386 Q256 412 298 386" stroke="#0e1b35" stroke-width="9"
+        fill="none" stroke-linecap="round"/>
+</svg>

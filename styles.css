@@ -110,6 +110,57 @@ body::before{
 .brand--sm .brand__mark{width:30px;height:30px;border-radius:8px}
 .brand--sm .brand__name{font-size:15px}
 
+/* ===== Install-Banner (PWA add-to-home prompt) ===== */
+.install-banner{
+  position: fixed; z-index: 90;
+  left: 14px; right: 14px;
+  bottom: calc(env(safe-area-inset-bottom) + 90px);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 16px 36px rgba(20,40,30,.18);
+  transform: translateY(20px); opacity: 0;
+  transition: all .3s cubic-bezier(.2,.8,.2,1);
+}
+.install-banner.is-show{ transform: translateY(0); opacity: 1 }
+.install-banner__icon{
+  width: 48px; height: 48px; border-radius: 12px;
+  object-fit: cover; flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+.install-banner__body{ flex: 1; min-width: 0 }
+.install-banner__title{
+  font-weight: 700; font-size: 14px; color: var(--ink);
+  letter-spacing: -.01em; line-height: 1.2;
+}
+.install-banner__desc{
+  font-size: 12px; color: var(--ink-3); line-height: 1.4;
+  margin-top: 2px;
+}
+.install-banner__cta{
+  appearance: none; border: 0; cursor: pointer;
+  background: var(--brand); color: #fff;
+  padding: 9px 14px; border-radius: 10px;
+  font: inherit; font-size: 13px; font-weight: 700;
+  letter-spacing: -.005em; white-space: nowrap;
+  flex-shrink: 0;
+}
+.install-banner__close{
+  appearance: none; border: 0; cursor: pointer;
+  background: transparent;
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 20px; line-height: 1; color: var(--ink-3);
+  display: grid; place-items: center;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+.install-banner__close:hover{ background: var(--surface-2); color: var(--ink) }
+@media (min-width: 720px){
+  .install-banner{ left: auto; right: 20px; max-width: 400px }
+}
+
 /* ===== ONBOARDING v2 — visual, fixed bottom buttons ===== */
 .onb{
   position: fixed; inset: 0;

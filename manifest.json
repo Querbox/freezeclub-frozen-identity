@@ -1,0 +1,58 @@
+{
+  "name": "Freezeclub · Frosti",
+  "short_name": "Freezeclub",
+  "description": "Dein digitaler Cryo-Companion. Sammle Punkte, lös sie als Rabatt ein, lass Frosti wachsen.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1f3d2e",
+  "background_color": "#dceffa",
+  "lang": "de-DE",
+  "categories": ["lifestyle", "health", "fitness"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Check-in",
+      "short_name": "Buchen",
+      "url": "./#checkin",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Shop & Belohnungen",
+      "short_name": "Shop",
+      "url": "./#shop",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

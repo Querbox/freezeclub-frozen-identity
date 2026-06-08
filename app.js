@@ -1383,6 +1383,83 @@ function enterApp(){
   $("#main").classList.remove("hidden");
   renderAll();
   setTimeout(spawnFrostParticles, 500);
+  setTimeout(maybeShowInstallPrompt, 4000);
+}
+
+/* ---- PWA install prompts (Chrome / Edge / iOS-Safari hint) ---- */
+let _deferredInstallPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+});
+
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches ||
+         window.navigator.standalone === true;
+}
+function isIOSSafari(){
+  const ua = navigator.userAgent || "";
+  const iOS = /iPhone|iPad|iPod/.test(ua);
+  const safari = /^((?!chrome|crios|fxios).)*safari/i.test(ua);
+  return iOS && safari;
+}
+
+function maybeShowInstallPrompt(){
+  if(isStandalone()) return;
+  if(localStorage.getItem("fc_install_dismissed")) return;
+
+  if(_deferredInstallPrompt){
+    showInstallBanner({
+      title: "Zur Startseite hinzufügen",
+      desc: "Installiere Freezeclub für schnellen Zugriff – kein App Store nötig.",
+      cta: "Installieren",
+      onCta: async () => {
+        _deferredInstallPrompt.prompt();
+        await _deferredInstallPrompt.userChoice;
+        _deferredInstallPrompt = null;
+        dismissInstallBanner(true);
+      },
+    });
+    return;
+  }
+
+  if(isIOSSafari()){
+    showInstallBanner({
+      title: "Frosti aufs iPhone holen",
+      desc: "Tippe unten auf Teilen, dann „Zum Home-Bildschirm".",
+      cta: "Verstanden",
+      onCta: () => dismissInstallBanner(true),
+    });
+  }
+}
+
+function showInstallBanner({ title, desc, cta, onCta }){
+  if(document.getElementById("installBanner")) return;
+  const el = document.createElement("div");
+  el.id = "installBanner";
+  el.className = "install-banner";
+  el.innerHTML = `
+    <img class="install-banner__icon" src="./icons/icon-192.png" alt="" draggable="false">
+    <div class="install-banner__body">
+      <div class="install-banner__title">${esc(title)}</div>
+      <div class="install-banner__desc">${esc(desc)}</div>
+    </div>
+    <button class="install-banner__cta" id="installCta">${esc(cta)}</button>
+    <button class="install-banner__close" id="installClose" aria-label="Schließen">×</button>
+  `;
+  document.body.appendChild(el);
+  setTimeout(() => el.classList.add("is-show"), 50);
+  document.getElementById("installCta").addEventListener("click", onCta);
+  document.getElementById("installClose").addEventListener("click", () => dismissInstallBanner(true));
+}
+
+function dismissInstallBanner(persist){
+  const el = document.getElementById("installBanner");
+  if(el){
+    el.classList.remove("is-show");
+    setTimeout(() => el.remove(), 250);
+  }
+  if(persist) localStorage.setItem("fc_install_dismissed", "1");
 }
 
 function boot(){
