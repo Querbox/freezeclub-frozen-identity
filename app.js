@@ -22,8 +22,18 @@ const RANKS = [
 
 const LEVEL_STEP = 500;
 
-/* Shop items — pulled from window.ACCESSORIES + window.BACKGROUNDS at runtime.
-   Categories: 'accessoire' (overlay) | 'background' (stage) | 'reward' (real-world). */
+/* Shop items — accessories + backgrounds + reward ladder.
+   Reward ladder is the MAIN motivator. Designed to give first reward after ~2 visits. */
+const REWARD_LADDER = [
+  { id: "reward-tea",        price: 200,  name: "Gratis Tee oder Kaffee",      icon: "☕", real_value: "≈ 3 €",   tier: 1 },
+  { id: "reward-towel",      price: 400,  name: "Premium-Handtuch inkl.",      icon: "🧖", real_value: "≈ 5 €",   tier: 2 },
+  { id: "reward-lymph50",    price: 600,  name: "50 % auf Lymphdrainage",      icon: "≋",  real_value: "≈ 15 €",  tier: 2 },
+  { id: "reward-discount10", price: 800,  name: "10 % Webshop-Code",           icon: "🎁", real_value: "Webshop", tier: 3 },
+  { id: "reward-cryo-free",  price: 1000, name: "Gratis Kältekammer",          icon: "❄",  real_value: "≈ 30 €",  tier: 3 },
+  { id: "reward-scan",       price: 2500, name: "4D-Bodyscan + Beratung",      icon: "◉",  real_value: "≈ 80 €",  tier: 4 },
+  { id: "reward-month",      price: 4500, name: "Gratis Freezeclub Monat",     icon: "★",  real_value: "≈ 199 €", tier: 5, limited: true },
+];
+
 function buildShopItems(){
   const items = [];
   const accs = window.ACCESSORIES || {};
@@ -50,13 +60,66 @@ function buildShopItems(){
       color: "#1f3d2e",
     });
   }
-  // Real-world rewards (future Shopify connection)
-  items.push({ id: "reward-discount10",  cat: "reward", name: "10 % Webshop-Code",     price: 800,  emoji: "🎁", limited: false, color: "#1f3d2e", preview: "#e6ece8" });
-  items.push({ id: "reward-session-free",cat: "reward", name: "Gratis Kältekammer",    price: 1500, emoji: "❄️", limited: false, color: "#1f3d2e", preview: "#e6ece8" });
-  items.push({ id: "reward-hoodie",      cat: "reward", name: "Freezeclub Hoodie",     price: 4500, emoji: "👕", limited: true,  color: "#1f3d2e", preview: "#e6ece8" });
+  // Reward ladder (real-world)
+  for(const r of REWARD_LADDER){
+    items.push({
+      id: r.id, cat: "reward",
+      name: r.name, price: r.price,
+      emoji: r.icon,
+      realValue: r.real_value,
+      tier: r.tier,
+      limited: !!r.limited,
+      color: "#1f3d2e", preview: "#e6ece8",
+    });
+  }
   return items;
 }
 const SHOP_ITEMS = buildShopItems();
+
+/* ===== Point-to-Euro anchor — shown everywhere ===== */
+const POINTS_PER_EURO = 100;
+function pointsToEuro(pts){
+  return (pts / POINTS_PER_EURO).toFixed(0) + " €";
+}
+
+/* ===== Off-Peak Multiplier ===== */
+function getOffPeakBonus(){
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun .. 6=Sat
+  const hour = now.getHours();
+  // Mo–Mi (1–3) zwischen 10–14 Uhr: 2× Punkte (Auslastungs-Glättung)
+  if(day >= 1 && day <= 3 && hour >= 10 && hour < 14){
+    return { active: true, multiplier: 2, label: "Off-Peak Bonus", desc: "Mo–Mi 10–14 Uhr · 2× Punkte" };
+  }
+  // Donnerstag-Vormittag 10-12 = 1.5×
+  if(day === 4 && hour >= 10 && hour < 12){
+    return { active: true, multiplier: 1.5, label: "Off-Peak Bonus", desc: "Donnerstag-Vormittag · 1,5× Punkte" };
+  }
+  return { active: false, multiplier: 1 };
+}
+
+/* ===== Comeback Detection ===== */
+function getComebackStatus(){
+  if(!state.lastVisitDate) return null;
+  const days = Math.floor((Date.now() - new Date(state.lastVisitDate).getTime()) / 86400000);
+  if(days < 14) return null;
+  const month = new Date().toISOString().slice(0,7);
+  if(state.comebackClaimedMonth === month) return null;
+  return { days, code: "WIRVERMISSENDICH", discount: 30 };
+}
+
+/* ===== Daily Knowledge Card ===== */
+function getDailyArticle(){
+  const articles = window.KNOWLEDGE || [];
+  if(!articles.length) return null;
+  // Deterministic pick: same article all day, rotates daily
+  const dayIdx = Math.floor(Date.now() / 86400000);
+  return articles[dayIdx % articles.length];
+}
+function isArticleReadToday(){
+  if(!state.lastArticleRead) return false;
+  return state.lastArticleRead.date === new Date().toDateString();
+}
 
 const ACHIEVEMENTS = [
   { id: "first-freeze", name: "First Freeze",  desc: "Erster Besuch",       icon: "❄", test: s => s.visits >= 1 },
@@ -110,6 +173,11 @@ const defaultState = () => ({
   challengeProgress: {}, unlockedAchievements: [],
   soundOn: true,
   avatar: window.defaultAvatar ? window.defaultAvatar() : null,
+  // Engagement state
+  lastArticleRead: null,          // { date, articleId }
+  readArticles: [],
+  comebackClaimedMonth: null,
+  weekGoalChosen: false,
   createdAt: new Date().toISOString(),
 });
 
@@ -414,8 +482,13 @@ function renderAll(animate=false){
   setNum("#statTotal", state.totalPoints);
   setNum("#statVisits", state.visits);
 
-  // Quick-action subtexts
-  const qaPoints = $("#qaPoints"); if(qaPoints) qaPoints.textContent = state.points.toLocaleString("de-DE") + " Pkt";
+  // Quick-action subtexts with EUR anchor
+  const qaPoints = $("#qaPoints");
+  if(qaPoints) qaPoints.textContent = state.points.toLocaleString("de-DE") + " Pkt · " + pointsToEuro(state.points);
+
+  renderHomeBanners();
+  renderNextReward();
+  renderDailyArticle();
 
   const greetName = $("#greetName"); if(greetName) greetName.textContent = state.firstName || "Frosti";
   const streakCount = $("#streakCount"); if(streakCount) streakCount.textContent = state.weeklyStreak || 0;
@@ -536,6 +609,131 @@ function renderAll(animate=false){
 
   renderEditor();
 }
+
+/* ---------- Engagement-Banner & Cards ---------- */
+
+function renderHomeBanners(){
+  // Off-Peak Banner
+  const offEl = $("#offpeakBanner");
+  if(offEl){
+    const off = getOffPeakBonus();
+    if(off.active){
+      offEl.classList.remove("hidden");
+      offEl.innerHTML = `
+        <div class="banner__icon">⚡</div>
+        <div class="banner__body">
+          <div class="banner__title">${esc(off.label)} aktiv</div>
+          <div class="banner__sub">${esc(off.desc)} — buche jetzt für Bonus</div>
+        </div>
+        <button class="banner__cta" data-go="checkin">Buchen</button>
+      `;
+    } else {
+      offEl.classList.add("hidden");
+    }
+  }
+
+  // Comeback Banner
+  const cbEl = $("#comebackBanner");
+  if(cbEl){
+    const cb = getComebackStatus();
+    if(cb){
+      cbEl.classList.remove("hidden");
+      cbEl.innerHTML = `
+        <div class="banner__icon">💙</div>
+        <div class="banner__body">
+          <div class="banner__title">Wir vermissen dich</div>
+          <div class="banner__sub">${cb.days} Tage nicht da. Dein Comeback-Coupon: <strong>${cb.discount} % Rabatt</strong></div>
+          <code class="banner__code">${esc(cb.code)}</code>
+        </div>
+        <button class="banner__cta" id="claimComeback">Einlösen</button>
+      `;
+    } else {
+      cbEl.classList.add("hidden");
+    }
+  }
+}
+
+function renderNextReward(){
+  const el = $("#nextRewardCard");
+  if(!el) return;
+  const rewards = (window.REWARD_LADDER || REWARD_LADDER).filter(r => !state.inventory.includes(r.id));
+  const next = rewards.find(r => state.points < r.price) || rewards[0];
+  if(!next){ el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+
+  const owned = state.points >= next.price;
+  const pct = Math.min(100, (state.points / next.price) * 100);
+  const remaining = Math.max(0, next.price - state.points);
+
+  el.innerHTML = `
+    <header class="card-row">
+      <div>
+        <p class="eyebrow">Nächste Belohnung</p>
+        <h3 class="card__title">${esc(next.name)}</h3>
+        <p class="reward-progress__sub">Wert ${esc(next.real_value || "—")} · ${next.price} Pkt</p>
+      </div>
+      <span class="reward-progress__icon">${esc(next.icon)}</span>
+    </header>
+    <div class="progress">
+      <div class="progress__bar"><div class="progress__fill" style="width:${pct}%;background:var(--brand)"></div></div>
+      <div class="progress__meta">
+        <span>${state.points.toLocaleString("de-DE")} / ${next.price} Pkt</span>
+        <span>${owned ? "Verfügbar!" : `Noch ${remaining} Pkt`}</span>
+      </div>
+    </div>
+    ${owned
+      ? `<button class="btn--cta" data-buy="${esc(next.id)}">Jetzt einlösen</button>`
+      : `<button class="btn--cta btn--cta-ghost" data-go="shop">Alle Belohnungen ansehen</button>`}
+  `;
+}
+
+function renderDailyArticle(){
+  const el = $("#dailyArticleCard");
+  if(!el) return;
+  const article = getDailyArticle();
+  if(!article){ el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  const read = isArticleReadToday();
+  el.innerHTML = `
+    <header class="card-row">
+      <div style="display:flex;align-items:center;gap:10px;flex:1">
+        <span class="article__icon" style="background:${esc(article.color)}1a;color:${esc(article.color)}">${esc(article.icon)}</span>
+        <div>
+          <p class="eyebrow">Wissen heute · ${esc(article.cat)}</p>
+          <h3 class="card__title" style="font-size:17px;line-height:1.3">${esc(article.title)}</h3>
+        </div>
+      </div>
+      ${read ? `<span class="badge-done">✓</span>` : `<span class="badge-pts">+${article.reward}</span>`}
+    </header>
+    <p class="muted" style="font-size:13px;line-height:1.5;margin:6px 0 4px">${esc(article.summary)}</p>
+    <button class="btn--cta ${read?'btn--cta-ghost':''}" data-article="${esc(article.id)}">${read ? "Erneut lesen" : `Jetzt lesen · ${article.readTime}`}</button>
+  `;
+}
+
+function openArticle(articleId){
+  const article = (window.KNOWLEDGE || []).find(a => a.id === articleId);
+  if(!article) return;
+  const wasRead = isArticleReadToday();
+  showModal({
+    eyebrow: article.cat,
+    title: article.title,
+    desc: article.body.join("\n\n"),
+    art: article.icon,
+  });
+  if(!wasRead){
+    state.points += article.reward;
+    state.seasonPoints += article.reward;
+    state.totalPoints += article.reward;
+    state.lastArticleRead = { date: new Date().toDateString(), articleId };
+    if(!state.readArticles.includes(articleId)) state.readArticles.push(articleId);
+    save();
+    sfx("point");
+    setTimeout(() => toast(`+${article.reward} Pkt für die Wissens-Karte`), 800);
+    renderAll(true);
+  }
+}
+
+window.REWARD_LADDER = REWARD_LADDER;
 
 /* ---------- Avatar meta (hearts + name tag) ---------- */
 function renderAvatarMeta(){
@@ -685,7 +883,8 @@ function catLabel(c){ return { accessoire:"Accessoires", background:"Hintergrün
 function bookService(id, evtTarget){
   const svc = SERVICES.find(s=>s.id===id);
   if(!svc) return;
-  const pts = svc.points;
+  const offPeak = getOffPeakBonus();
+  const pts = Math.round(svc.points * offPeak.multiplier);
 
   const oldLevel = Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
 
@@ -728,6 +927,8 @@ function bookService(id, evtTarget){
   save();
   if(evtTarget) fpBurst(evtTarget, "+" + pts);
   sfx("point");
+  const bonusLabel = offPeak.active ? ` · ${offPeak.multiplier}× Bonus aktiv` : "";
+  toast(`+${pts} Punkte · ${svc.name}${bonusLabel}`);
   renderAll(true);
 
   if(leveledUp){
@@ -769,14 +970,28 @@ function buyItem(id){
   if(!item || state.points < item.price || state.inventory.includes(id)) return;
   state.points -= item.price;
   state.inventory.push(id);
-  // Auto-equip into the right slot
   if(item.cat === "accessoire") state.equipped.accessoire = id;
   else if(item.cat === "background") state.equipped.background = id;
   save();
   sfx("buy");
-  showLootReveal(item);
+  if(item.cat === "reward"){
+    showRewardClaim(item);
+  } else {
+    showLootReveal(item);
+  }
   renderAll(true);
   checkAchievements();
+}
+
+function showRewardClaim(item){
+  confetti("epic");
+  const code = (item.id.toUpperCase() + "-" + Math.random().toString(36).slice(2,7).toUpperCase());
+  showModal({
+    eyebrow: "Belohnung eingelöst",
+    title: item.name,
+    desc: `Zeig diesen Code an der Rezeption oder gib ihn im Webshop ein:\n\n${code}\n\nWert: ${item.realValue || "—"}`,
+    art: item.emoji,
+  });
 }
 
 function equipItem(id){
@@ -804,7 +1019,11 @@ function toast(msg, ms=2400){
 function showModal({ eyebrow, title, desc, art }){
   $("#modalEyebrow").textContent = eyebrow;
   $("#modalTitle").textContent = title;
-  $("#modalDesc").textContent = desc;
+  // Multi-paragraph aware
+  const descEl = $("#modalDesc");
+  if(descEl){
+    descEl.innerHTML = String(desc || "").split(/\n\n+/).map(p => `<p>${esc(p)}</p>`).join("");
+  }
   $("#modalArt").textContent = art;
   $("#modal").classList.add("is-show");
 }
@@ -872,7 +1091,16 @@ function showTab(name){
 function bindEvents(){
   // ===== Onboarding slide navigation =====
   let currentSlide = 0;
-  const totalSlides = 4;
+  const totalSlides = 5;
+
+  // Goal-tile selection inside slide 4
+  document.addEventListener("click", (e) => {
+    const goal = e.target.closest("[data-weekgoal]");
+    if(!goal) return;
+    $$(".goal-tile").forEach(g => g.classList.remove("is-selected"));
+    goal.classList.add("is-selected");
+    sfx("click");
+  });
 
   function goToSlide(idx){
     idx = Math.max(0, Math.min(totalSlides - 1, idx));
@@ -895,6 +1123,12 @@ function bindEvents(){
     }
     state.firstName = firstName;
     state.goal = $("#goal").value;
+    // Pick chosen week goal (default 2)
+    const chosenGoalEl = document.querySelector(".goal-tile.is-selected");
+    if(chosenGoalEl){
+      state.weekGoal = parseInt(chosenGoalEl.dataset.weekgoal, 10) || 2;
+      state.weekGoalChosen = true;
+    }
     state.onboarded = true;
     state.avatar = window.defaultAvatar();
     state.points = 200; state.totalPoints = 200; state.seasonPoints = 200;
@@ -931,6 +1165,15 @@ function bindEvents(){
 
   document.addEventListener("click", (e) => {
     const part = e.target.closest("[data-part]");
+    const article = e.target.closest("[data-article]");
+    if(article){ openArticle(article.dataset.article); return; }
+    if(e.target.id === "claimComeback"){
+      navigator.clipboard?.writeText("WIRVERMISSENDICH");
+      toast("Code kopiert: WIRVERMISSENDICH · 30 % Rabatt");
+      state.comebackClaimedMonth = new Date().toISOString().slice(0,7);
+      save(); renderHomeBanners();
+      return;
+    }
     const presetCard = e.target.closest("[data-preset]");
     if(presetCard){ selectPreset(presetCard.dataset.preset); return; }
     const unequipBtn = e.target.closest("[data-unequip]");
@@ -1003,6 +1246,11 @@ function boot(){
     state.equipped = { accessoire: null, background: null };
     save();
   }
+  // Engagement migrations
+  if(state.lastArticleRead === undefined) state.lastArticleRead = null;
+  if(!Array.isArray(state.readArticles)) state.readArticles = [];
+  if(state.comebackClaimedMonth === undefined) state.comebackClaimedMonth = null;
+  if(state.weekGoalChosen === undefined) state.weekGoalChosen = false;
   // Migrate older daily-streak schema to weekly
   if(!state.weekGoal) state.weekGoal = 2;
   if(state.weekKey === undefined) state.weekKey = null;

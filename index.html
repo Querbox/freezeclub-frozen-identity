@@ -91,8 +91,21 @@
             <p class="slide__hint">+100 Bonus-Punkte sobald du dein Wochenziel erreichst.</p>
           </article>
 
-          <!-- Slide 4: Account erstellen -->
+          <!-- Slide 4: Persönliches Wochenziel -->
           <article class="slide" data-step="3">
+            <span class="slide__badge">Dein Tempo</span>
+            <h1 class="display">Wie oft willst<br/>du kommen?</h1>
+            <p class="lede">Wähle ein realistisches Wochenziel. Du kannst es jederzeit ändern.</p>
+            <div class="goal-grid">
+              <button type="button" class="goal-tile" data-weekgoal="1"><span class="goal-tile__num">1×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Entspannt</span></button>
+              <button type="button" class="goal-tile is-selected" data-weekgoal="2"><span class="goal-tile__num">2×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Empfohlen</span></button>
+              <button type="button" class="goal-tile" data-weekgoal="3"><span class="goal-tile__num">3×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Ambitioniert</span></button>
+              <button type="button" class="goal-tile" data-weekgoal="4"><span class="goal-tile__num">4×</span><span class="goal-tile__label">pro Woche</span><span class="goal-tile__hint">Elite</span></button>
+            </div>
+          </article>
+
+          <!-- Slide 5: Account erstellen -->
+          <article class="slide" data-step="4">
             <span class="slide__badge">Letzter Schritt</span>
             <h1 class="display">Frosti<br/>aufwecken.</h1>
             <p class="lede">Wir starten dich mit <strong>200 Bonus-Eis-Punkten</strong> für deinen ersten Besuch.</p>
@@ -118,6 +131,7 @@
         <footer class="onboarding__footer">
           <div class="onboarding__dots" id="onboardingDots">
             <span class="dot is-active"></span>
+            <span class="dot"></span>
             <span class="dot"></span>
             <span class="dot"></span>
             <span class="dot"></span>
@@ -170,6 +184,12 @@
 
       <!-- HOME (mobile-first, simplified) -->
       <section class="view is-active" id="view-home">
+        <!-- Comeback Banner (only if inactive >14d) -->
+        <article class="banner banner--comeback hidden" id="comebackBanner"></article>
+
+        <!-- Off-Peak Banner (only during off-peak hours) -->
+        <article class="banner banner--offpeak hidden" id="offpeakBanner"></article>
+
         <!-- Hero: Avatar + Level -->
         <article class="hero-frosti">
           <div class="hero-frosti__avatar avatar-stage">
@@ -196,7 +216,7 @@
           </button>
           <button class="qa" data-go="shop">
             <span class="qa__icon">🛍️</span>
-            <div class="qa__text"><span class="qa__label">Shop</span><span class="qa__sub" id="qaPoints">0 Pkt</span></div>
+            <div class="qa__text"><span class="qa__label">Shop</span><span class="qa__sub" id="qaPoints">0 Pkt · 0 €</span></div>
             <span class="qa__chev">›</span>
           </button>
           <button class="qa" data-go="challenges">
@@ -205,6 +225,12 @@
             <span class="qa__chev">›</span>
           </button>
         </div>
+
+        <!-- Next Reward Progress -->
+        <article class="card card--reward-progress" id="nextRewardCard"></article>
+
+        <!-- Daily Knowledge Card -->
+        <article class="card card--daily" id="dailyArticleCard"></article>
 
         <!-- Wochenziel Card -->
         <article class="card card--week">
@@ -390,6 +416,7 @@
     <div class="confetti" id="confetti"></div>
   </div>
 <script src="avatar.js"></script>
+<script src="content.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
