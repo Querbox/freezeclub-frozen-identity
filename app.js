@@ -353,10 +353,11 @@ const SHOP_ITEMS = buildShopItems();
    500 Pkt = 1 €  (realistische Cashback-Rate, ~2 % pro Besuch) */
 const POINTS_PER_EURO = 500;
 
-// Shop state — declared early to avoid TDZ in default params
+// Shop state + install prompt — declared early to avoid TDZ in handlers
 var currentFilter = "all";
 var shopMode = "shop";
 var _shopSection = "challenges";
+var _deferredInstallPrompt = null;
 function pointsToEuro(pts){
   return (pts / POINTS_PER_EURO).toFixed(0) + " €";
 }
@@ -2449,7 +2450,6 @@ function enterApp(){
 }
 
 /* ---- PWA install prompts (Chrome / Edge / iOS-Safari hint) ---- */
-let _deferredInstallPrompt = null;
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   _deferredInstallPrompt = e;
