@@ -2052,13 +2052,17 @@ function showTab(name){
 
 /* ---------- Events ---------- */
 function bindEvents(){
-  // Onboarding nav handled by GLOBAL delegation (see below bindEvents).
+  // ============================================================
+  // PRIORITY: Settings handlers FIRST, before anything that might throw
+  // ============================================================
+  registerSettingsHandlers();
+
+  // Onboarding nav handled by GLOBAL delegation (see top of script).
   // Form submit binding remains here for redundancy.
   $("#onboardingForm")?.addEventListener("submit", e => {
     e.preventDefault();
     completeOnboarding();
   });
-
 
   $$(".tab, .bnav").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
   $$("[data-go]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.go)));
@@ -2111,10 +2115,14 @@ function bindEvents(){
     renderShop(currentFilter);
   });
 
-  $("#modalClose").addEventListener("click", () => { sfx("click"); hideModal(); });
-  $("#modal").addEventListener("click", (e) => { if(e.target.id === "modal") hideModal(); });
+  // Modal close (safe with optional chaining)
+  $("#modalClose")?.addEventListener("click", () => { sfx("click"); hideModal(); });
+  $("#modal")?.addEventListener("click", (e) => { if(e.target.id === "modal") hideModal(); });
+}
 
-  // === Settings handlers registered globally for capture-phase delegation ===
+// === Settings handlers — registered FIRST in bindEvents ===
+function registerSettingsHandlers(){
+  if(!window.__settingsHandlers) window.__settingsHandlers = {};
   window.__settingsHandlers.soundBtn = function(){
     state.soundOn = !state.soundOn;
     save();
@@ -2257,7 +2265,7 @@ function bindEvents(){
       ? "Keine Fehler aufgezeichnet."
       : errors.map(function(e, i){ return (i+1) + ". " + e.msg + (e.source ? " (" + e.source.split("/").pop() + ":" + e.line + ")" : ""); }).join("\n\n");
     const summary = [
-      "Version: v4.3",
+      "Version: v4.8",
       "Online: " + (navigator.onLine ? "ja" : "nein"),
       "Standalone: " + (isStandalone() ? "ja" : "nein"),
       "Service-Worker: " + ("serviceWorker" in navigator ? "verfügbar" : "nicht verfügbar"),
@@ -2272,8 +2280,11 @@ function bindEvents(){
     ].join("\n");
     showInfoModal({ title: "Diagnose", icon: "📋", body: summary });
   };
+}
+// === END registerSettingsHandlers ===
 
-  // Legacy passthroughs (kept harmless)
+// Legacy passthroughs — disabled (registerSettingsHandlers handles everything now)
+function __noop_bindLegacySettings(){
   $("#soundBtn")?.addEventListener("click", () => {});
   $("#weekGoalBtn")?.addEventListener("click", () => {});
   $("#notifBtn")?.addEventListener("click", async () => {
