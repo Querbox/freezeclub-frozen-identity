@@ -68,11 +68,40 @@ function __switchView(name){
 }
 document.addEventListener("click", function(e){
   if(!e.target.closest) return;
+  // Shop section tabs
+  var shopTab = e.target.closest("[data-shopsection]");
+  if(shopTab){
+    if(typeof switchShopSection === "function") switchShopSection(shopTab.dataset.shopsection);
+    e.preventDefault();
+    return;
+  }
+  // Mystery spin
+  if(e.target.closest("#mysterySpinBtn")){
+    if(typeof spinMystery === "function") spinMystery();
+    e.preventDefault();
+    return;
+  }
+  // Redemption (cashback)
+  var redeem = e.target.closest("[data-redeem]");
+  if(redeem){
+    if(typeof redeemDiscount === "function") redeemDiscount(redeem.dataset.redeem);
+    e.preventDefault();
+    return;
+  }
+  // Critical: service booking — works even if bindEvents fails
+  var svc = e.target.closest("[data-service]");
+  if(svc){
+    if(typeof bookService === "function") bookService(svc.dataset.service, svc);
+    e.preventDefault();
+    return;
+  }
+  // Tab buttons
   var tab = e.target.closest("[data-tab]");
   if(tab){
     if(__switchView(tab.dataset.tab)) e.preventDefault();
     return;
   }
+  // data-go redirects to a tab
   var go = e.target.closest("[data-go]");
   if(go){
     if(__switchView(go.dataset.go)) e.preventDefault();
@@ -234,16 +263,10 @@ const SLEEP_AFTER_DAYS = 14;
 const SLEEP_NEW_USER_GRACE_DAYS = 7;
 
 function isFrostiSleeping(){
-  const lastVisitTs = state.lastVisitDate ? new Date(state.lastVisitDate).getTime() : null;
-  const createdTs = state.createdAt ? new Date(state.createdAt).getTime() : Date.now();
-  const now = Date.now();
-  if(lastVisitTs){
-    const daysSinceVisit = (now - lastVisitTs) / 86400000;
-    return daysSinceVisit > SLEEP_AFTER_DAYS;
-  }
-  // Never visited — grace period after account creation
-  const daysSinceCreated = (now - createdTs) / 86400000;
-  return daysSinceCreated > SLEEP_NEW_USER_GRACE_DAYS;
+  // Neuer Account ohne Besuche → niemals schlafend
+  if(!state.lastVisitDate) return false;
+  const days = (Date.now() - new Date(state.lastVisitDate).getTime()) / 86400000;
+  return days > SLEEP_AFTER_DAYS;
 }
 
 function daysUntilSleep(){
@@ -694,6 +717,13 @@ function renderAll(animate=false){
   renderChallengeList();
   renderSleepState();
   updateBellDot();
+  // Shop view (lazy if not visible — cheap anyway)
+  renderShopBalance();
+  renderShopChallenges();
+  renderMysteryBox();
+  renderGoodies();
+  renderAnwendungen();
+  renderMerch();
 
   // Notification & install labels in settings
   const notifLabel = $("#notifLabel");
@@ -1164,7 +1194,7 @@ function renderEarnGrid(){
     { id: "weekly",    title: "Wochenziel",       desc: `${state.weekVisits || 0} / ${state.weekGoal || 2} diese Woche`, icon: "🎯", iconBg: "#dcf0ea", iconFg: "#2a8a6e", reward: "+50 Pkt Bonus", action: "Status", go: "profile" },
   ];
   el.innerHTML = cards.map(c => `
-    <article class="earn-card">
+    <button class="earn-card" data-go="${c.go}" type="button">
       <div class="earn-card__icon" style="background:${c.iconBg};color:${c.iconFg}">${esc(c.icon)}</div>
       <div class="earn-card__body">
         <div class="earn-card__title">${esc(c.title)}</div>
@@ -1172,9 +1202,9 @@ function renderEarnGrid(){
       </div>
       <div class="earn-card__foot">
         <span class="earn-card__reward">${esc(c.reward)}</span>
-        <button class="earn-card__cta" data-go="${c.go}">${esc(c.action)} →</button>
+        <span class="earn-card__cta">${esc(c.action)} →</span>
       </div>
-    </article>
+    </button>
   `).join("");
 }
 
@@ -1440,6 +1470,225 @@ function redeemDiscount(productId){
 }
 
 window.REAL_PRODUCTS = REAL_PRODUCTS;
+
+/* ===== Shop Sections (Challenges + Goodies + Anwendungen + Merch) ===== */
+let _shopSection = "challenges";
+function switchShopSection(name){
+  _shopSection = name;
+  document.querySelectorAll(".shop-tab").forEach(t => t.classList.toggle("is-active", t.dataset.shopsection === name));
+  document.querySelectorAll(".shop-pane").forEach(p => p.classList.toggle("is-active", p.dataset.pane === name));
+}
+
+function renderShopBalance(){
+  const bal = $("#shopBalance"); if(bal) bal.textContent = pointsToEuro(state.points);
+  const pts = $("#shopPoints"); if(pts) pts.textContent = state.points.toLocaleString("de-DE");
+}
+
+function renderShopChallenges(){
+  const el = $("#shopChallengeList"); if(!el) return;
+  if(!Array.isArray(CHALLENGES) || CHALLENGES.length === 0){ el.innerHTML = '<p class="shop-empty__text">Aktuell keine Aufgaben.</p>'; return; }
+  el.innerHTML = CHALLENGES.map(c => {
+    const prog = (state.challengeProgress && state.challengeProgress[c.id]) || 0;
+    const pct = Math.min(100, (prog / c.goal) * 100);
+    const done = prog >= c.goal;
+    return `<article class="ch-card ${done?'is-done':''}">
+      <div class="ch-card__top">
+        <div class="ch-card__icon">${done ? "✓" : "★"}</div>
+        <div class="ch-card__body">
+          <div class="ch-card__title">${esc(c.title)}</div>
+          <div class="ch-card__desc">${esc(c.desc)}</div>
+        </div>
+        <span class="ch-card__reward">+${c.reward}</span>
+      </div>
+      <div class="ch-card__bar"><div class="ch-card__fill" style="width:${pct}%"></div></div>
+      <div class="ch-card__meta">${prog} / ${c.goal}${done ? " · erledigt" : ""}</div>
+    </article>`;
+  }).join("");
+}
+
+/* Mystery Box — 1× pro Tag, Random Reward */
+function renderMysteryBox(){
+  const el = $("#mysteryBox"); if(!el) return;
+  const today = new Date().toDateString();
+  const lastUsed = state.mysteryLastDate || null;
+  const usedToday = lastUsed === today;
+  const lastReward = state.mysteryLastReward || 0;
+  const sleeping = isFrostiSleeping();
+
+  if(sleeping){
+    el.innerHTML = `
+      <div class="mystery-box__icon">💤</div>
+      <div class="mystery-box__body">
+        <div class="mystery-box__title">Frosti schläft</div>
+        <div class="mystery-box__desc">Komm vorbei, um das Glücksrad zu drehen.</div>
+      </div>
+    `;
+    el.classList.add("is-locked");
+    return;
+  }
+
+  if(usedToday){
+    el.innerHTML = `
+      <div class="mystery-box__icon">🎁</div>
+      <div class="mystery-box__body">
+        <div class="mystery-box__title">Heute schon eingelöst</div>
+        <div class="mystery-box__desc">Du hast <strong>+${lastReward} Pkt</strong> gewonnen. Komm morgen wieder!</div>
+      </div>
+    `;
+    el.classList.add("is-locked");
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="mystery-box__icon mystery-box__icon--shake">🎰</div>
+    <div class="mystery-box__body">
+      <div class="mystery-box__title">Tägliches Glücksrad</div>
+      <div class="mystery-box__desc">Dreh für 30 – 200 Bonus-Punkte. Einmal pro Tag.</div>
+    </div>
+    <button class="mystery-box__cta" id="mysterySpinBtn">Drehen</button>
+  `;
+  el.classList.remove("is-locked");
+}
+
+function spinMystery(){
+  const today = new Date().toDateString();
+  if(state.mysteryLastDate === today) return;
+  if(isFrostiSleeping()) return;
+  // Weighted random: 50% chance 30-60, 35% 60-120, 12% 120-180, 3% 180-200
+  const r = Math.random();
+  let reward;
+  if(r < .5) reward = 30 + Math.floor(Math.random() * 31);
+  else if(r < .85) reward = 60 + Math.floor(Math.random() * 61);
+  else if(r < .97) reward = 120 + Math.floor(Math.random() * 61);
+  else reward = 180 + Math.floor(Math.random() * 21);
+
+  awardPoints(reward, "visit"); // mystery counts as engagement bonus
+  state.mysteryLastDate = today;
+  state.mysteryLastReward = reward;
+  save();
+  sfx("levelup");
+  confetti();
+  showModal({
+    eyebrow: "Glücksrad",
+    title: `+${reward} Punkte`,
+    desc: `Komm morgen wieder für deinen nächsten Spin.`,
+    art: "🎰",
+  });
+  renderAll(true);
+}
+
+function renderAnwendungen(){
+  const el = $("#anwendungList"); if(!el) return;
+  const services = REAL_PRODUCTS.filter(p => p.cat === "service");
+  el.innerHTML = services.map(p => {
+    const d = maxDiscountFor(p);
+    const capEuro = p.price * (p.maxDiscountPct / 100);
+    const progressPct = Math.min(100, (d.euro / capEuro) * 100);
+    const canRedeem = d.euro >= 1;
+    return `<article class="anwendung-card">
+      <div class="anwendung-card__head">
+        <div class="anwendung-card__icon">${esc(p.icon)}</div>
+        <div class="anwendung-card__meta">
+          <div class="anwendung-card__name">${esc(p.name)}</div>
+          <div class="anwendung-card__desc">${esc(p.desc)}</div>
+        </div>
+        <div class="anwendung-card__price">${p.price.toFixed(0)} €</div>
+      </div>
+      <div class="anwendung-card__progress">
+        <div class="anwendung-card__bar"><div class="anwendung-card__fill" style="width:${progressPct}%"></div></div>
+        <div class="anwendung-card__progmeta">
+          <span>Dein Rabatt: <strong>${d.euro.toFixed(2)} €</strong></span>
+          <span>max. ${capEuro.toFixed(0)} € · ${p.maxDiscountPct}%</span>
+        </div>
+      </div>
+      ${canRedeem
+        ? `<button class="anwendung-card__cta" data-redeem="${esc(p.id)}">${d.euro.toFixed(2)} € einlösen · Final ${d.finalPrice.toFixed(2)} €</button>`
+        : `<button class="anwendung-card__cta is-locked" disabled>Sammle Punkte für Cashback</button>`}
+    </article>`;
+  }).join("");
+}
+
+function renderMerch(){
+  const el = $("#merchGrid"); if(!el) return;
+  const products = REAL_PRODUCTS.filter(p => p.cat === "webshop");
+  el.innerHTML = products.map(p => {
+    const d = maxDiscountFor(p);
+    const canRedeem = d.euro >= 1;
+    return `<article class="merch-card">
+      <div class="merch-card__icon">${esc(p.icon)}</div>
+      <div class="merch-card__name">${esc(p.name)}</div>
+      <div class="merch-card__desc">${esc(p.desc)}</div>
+      <div class="merch-card__price-row">
+        <span class="merch-card__price">${p.price.toFixed(0)} €</span>
+        ${d.euro >= 1 ? `<span class="merch-card__discount">−${d.euro.toFixed(2)} €</span>` : ''}
+      </div>
+      ${canRedeem
+        ? `<button class="merch-card__cta" data-redeem="${esc(p.id)}">Einlösen · ${d.finalPrice.toFixed(2)} €</button>`
+        : `<button class="merch-card__cta is-locked" disabled>Sammle Punkte</button>`}
+    </article>`;
+  }).join("");
+}
+
+function renderGoodies(){
+  const el = $("#goodiesList"); if(!el) return;
+  // Goodies: small in-app perks
+  const today = new Date().toDateString();
+  const goodies = [
+    {
+      id: "daily-checkin",
+      icon: "📍",
+      title: "Daily Check-in Bonus",
+      desc: state.dailyCheckinDate === today ? "Heute schon abgeholt" : "+15 Pkt für deinen Login",
+      cta: state.dailyCheckinDate === today ? "Eingelöst" : "Abholen",
+      locked: state.dailyCheckinDate === today,
+      action: () => {
+        if(state.dailyCheckinDate === today) return;
+        if(isFrostiSleeping()){ toast("Frosti schläft 💤"); return; }
+        state.dailyCheckinDate = today;
+        awardPoints(15, "visit");
+        save(); sfx("point");
+        toast("+15 Pkt für deinen Daily-Bonus");
+        renderAll(true);
+      },
+    },
+    {
+      id: "share",
+      icon: "🤝",
+      title: "Freund einladen",
+      desc: "Du + dein Freund bekommt +200 Pkt beim ersten Besuch",
+      cta: "Code teilen",
+      locked: false,
+      action: () => {
+        const code = "FROSTI-" + (state.userId || "FZ-XXXX").replace(/[^A-Z0-9]/g,"");
+        if(navigator.share){
+          navigator.share({ title: "Freezeclub Frosti", text: `Komm mit zum Freezeclub! Code: ${code}`, url: location.href }).catch(()=>{});
+        } else {
+          navigator.clipboard?.writeText(code);
+          toast(`Code kopiert: ${code}`);
+        }
+      },
+    },
+  ];
+  el.innerHTML = goodies.map((g, i) => `
+    <article class="goody-card ${g.locked?'is-locked':''}" data-goody="${i}">
+      <div class="goody-card__icon">${esc(g.icon)}</div>
+      <div class="goody-card__body">
+        <div class="goody-card__title">${esc(g.title)}</div>
+        <div class="goody-card__desc">${esc(g.desc)}</div>
+      </div>
+      <button class="goody-card__cta" ${g.locked?'disabled':''}>${esc(g.cta)}</button>
+    </article>
+  `).join("");
+  // Wire up actions
+  document.querySelectorAll("#goodiesList .goody-card__cta").forEach((btn, i) => {
+    btn.addEventListener("click", () => {
+      if(!goodies[i].locked) goodies[i].action();
+    });
+  });
+}
+
+window.switchShopSection = switchShopSection;
+window.spinMystery = spinMystery;
 
 /* ---------- Actions ---------- */
 function bookService(id, evtTarget){

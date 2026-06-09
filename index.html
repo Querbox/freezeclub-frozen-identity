@@ -303,41 +303,66 @@
         </div>
       </section>
 
-      <!-- SHOP -->
+      <!-- SHOP (Challenges + Goodies + Anwendungen einlösen) -->
       <section class="view" id="view-shop">
-        <header class="shop-header">
-          <div class="shop-toggle" id="shopToggle">
-            <button class="shop-toggle__btn is-active" data-shoptab="shop">Shop</button>
-            <button class="shop-toggle__btn" data-shoptab="inventory">Inventar</button>
+        <header class="view__header">
+          <div>
+            <p class="eyebrow">Shop</p>
+            <h2 class="h1">Challenges & Goodies</h2>
           </div>
-          <span class="currency-badge">
-            <span class="currency-badge__icon">
-              <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z" fill="currentColor"/></svg>
-            </span>
-            <span class="currency-badge__num" id="shopPoints">0</span>
-          </span>
         </header>
 
-        <div class="shop-cats" id="shopFilters" role="tablist">
-          <button class="shop-cat is-active" data-filter="all" aria-label="Alle">
-            <svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
-            <span>Alle</span>
-          </button>
-          <button class="shop-cat" data-filter="service" aria-label="Anwendungen">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 3v18M3 12h18M5.5 5.5l13 13M18.5 5.5l-13 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
-            <span>Anwendungen</span>
-          </button>
-          <button class="shop-cat" data-filter="webshop" aria-label="Webshop">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 8h14l-1 12H6L5 8zM8 8V5a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
-            <span>Webshop</span>
-          </button>
-          <button class="shop-cat" data-filter="accessoire" aria-label="Avatar">
-            <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="9" r="4" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
-            <span>Avatar</span>
-          </button>
+        <!-- Currency snapshot -->
+        <article class="balance-card">
+          <div class="balance-card__top">
+            <div>
+              <span class="balance-card__label">Dein Guthaben</span>
+              <span class="balance-card__num"><span id="shopBalance">0</span></span>
+            </div>
+            <div class="balance-card__pts">
+              <span id="shopPoints">0</span> Pkt
+              <span class="balance-card__rate">200 Pkt = 1 €</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Shop scrollable tab strip -->
+        <div class="shop-tabs">
+          <button class="shop-tab is-active" data-shopsection="challenges">Challenges</button>
+          <button class="shop-tab" data-shopsection="goodies">Goodies</button>
+          <button class="shop-tab" data-shopsection="anwendungen">Anwendungen</button>
+          <button class="shop-tab" data-shopsection="merch">Merch</button>
         </div>
 
-        <div class="shop-grid" id="shopGrid"></div>
+        <!-- Challenges Section -->
+        <section class="shop-pane is-active" data-pane="challenges">
+          <p class="shop-pane__intro">Erledige Aufgaben für Extra-Punkte.</p>
+          <div class="challenge-list" id="shopChallengeList"></div>
+        </section>
+
+        <!-- Goodies Section -->
+        <section class="shop-pane" data-pane="goodies">
+          <p class="shop-pane__intro">Glück und kleine Geschenke.</p>
+          <article class="mystery-box" id="mysteryBox"></article>
+          <div class="goodies-list" id="goodiesList"></div>
+        </section>
+
+        <!-- Anwendungen einlösen -->
+        <section class="shop-pane" data-pane="anwendungen">
+          <p class="shop-pane__intro">Echte Studio-Anwendungen mit Cashback aus deinen Punkten.</p>
+          <div class="anwendung-list" id="anwendungList"></div>
+        </section>
+
+        <!-- Merch -->
+        <section class="shop-pane" data-pane="merch">
+          <p class="shop-pane__intro">Freezeclub-Merch und Webshop-Produkte.</p>
+          <div class="merch-grid" id="merchGrid"></div>
+        </section>
+
+        <!-- Hidden legacy for compat -->
+        <div class="shop-grid hidden" id="shopGrid"></div>
+        <div class="shop-cats hidden" id="shopFilters"></div>
+        <div class="shop-toggle hidden" id="shopToggle"></div>
       </section>
 
 
