@@ -551,7 +551,7 @@
           </div>
         </section>
 
-        <p class="settings-footer">Freezeclub Frosti · v4.8 · 🇩🇪 Made in Germany</p>
+        <p class="settings-footer">Freezeclub Frosti · v5.0 · 🇩🇪 Made in Germany</p>
       </section>
 
       <!-- LEADERBOARD -->
@@ -588,23 +588,23 @@
     <div class="notif-pop hidden" id="notifPop">
       <header class="notif-pop__head">
         <h4>Benachrichtigungen</h4>
-        <button class="notif-pop__close" id="notifClose" aria-label="Schließen">×</button>
+        <button class="notif-pop__close" id="notifClose" type="button" aria-label="Schließen" onclick="document.getElementById('notifPop').classList.add('hidden');document.getElementById('notifScrim').classList.add('hidden')">×</button>
       </header>
       <div class="notif-pop__list" id="notifList"></div>
     </div>
-    <div class="notif-pop__scrim hidden" id="notifScrim"></div>
+    <div class="notif-pop__scrim hidden" id="notifScrim" onclick="document.getElementById('notifPop').classList.add('hidden');this.classList.add('hidden')"></div>
 
     <!-- Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <!-- Modal -->
-    <div class="modal" id="modal">
+    <div class="modal" id="modal" onclick="if(event.target===this)this.classList.remove('is-show')">
       <div class="modal__inner">
         <div class="modal__art" id="modalArt">◆</div>
         <p class="modal__eyebrow" id="modalEyebrow">Level Up</p>
         <h2 class="modal__title" id="modalTitle">Stufe 2</h2>
         <p class="modal__desc" id="modalDesc">Du hast eine neue Stufe erreicht.</p>
-        <button class="modal__close" id="modalClose">Weiter</button>
+        <button class="modal__close" id="modalClose" type="button" onclick="document.getElementById('modal').classList.remove('is-show')">Weiter</button>
       </div>
     </div>
 
