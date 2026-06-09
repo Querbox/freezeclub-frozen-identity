@@ -352,6 +352,11 @@ const SHOP_ITEMS = buildShopItems();
 /* ===== Point-to-Euro anchor — shown everywhere =====
    500 Pkt = 1 €  (realistische Cashback-Rate, ~2 % pro Besuch) */
 const POINTS_PER_EURO = 500;
+
+// Shop state — declared early to avoid TDZ in default params
+var currentFilter = "all";
+var shopMode = "shop";
+var _shopSection = "challenges";
 function pointsToEuro(pts){
   return (pts / POINTS_PER_EURO).toFixed(0) + " €";
 }
@@ -1457,10 +1462,8 @@ function unequipSlot(slot){
   renderAvatar($("#avatarStage"));
 }
 
-let currentFilter = "all";
-let shopMode = "shop";
-
-function renderShop(filter = currentFilter){
+function renderShop(filter){
+  if(filter === undefined) filter = currentFilter || "all";
   const grid = $("#shopGrid");
   if(!grid) return;
 
@@ -1592,7 +1595,6 @@ function redeemDiscount(productId){
 window.REAL_PRODUCTS = REAL_PRODUCTS;
 
 /* ===== Shop Sections (Challenges + Goodies + Anwendungen + Merch) ===== */
-let _shopSection = "challenges";
 function switchShopSection(name){
   try {
     _shopSection = name;
