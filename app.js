@@ -350,8 +350,8 @@ function buildShopItems(){
 const SHOP_ITEMS = buildShopItems();
 
 /* ===== Point-to-Euro anchor — shown everywhere =====
-   200 Pkt = 1 €  (Punkte sind weniger wert → langsamerer Cashback) */
-const POINTS_PER_EURO = 200;
+   500 Pkt = 1 €  (realistische Cashback-Rate, ~2 % pro Besuch) */
+const POINTS_PER_EURO = 500;
 function pointsToEuro(pts){
   return (pts / POINTS_PER_EURO).toFixed(0) + " €";
 }
@@ -1470,7 +1470,7 @@ function renderShop(filter = currentFilter){
     grid.innerHTML = `
       <div class="cashback-info">
         <div class="cashback-info__balance">Dein Guthaben: <strong>${pointsToEuro(state.points)}</strong></div>
-        <div class="cashback-info__hint">100 Pkt = 1 € Rabatt · einlösbar auf Produkte unten</div>
+        <div class="cashback-info__hint">500 Pkt = 1 € Rabatt · einlösbar auf Produkte unten</div>
       </div>
       <div class="cashback-grid">${products.map(renderCashbackCard).join("")}</div>
     `;
@@ -1499,7 +1499,7 @@ function renderShop(filter = currentFilter){
   grid.innerHTML = `
     <div class="cashback-info">
       <div class="cashback-info__balance">Dein Guthaben: <strong>${pointsToEuro(state.points)}</strong></div>
-      <div class="cashback-info__hint">100 Pkt = 1 € · einlösbar auf reale Produkte</div>
+      <div class="cashback-info__hint">500 Pkt = 1 € · einlösbar auf reale Produkte</div>
     </div>
     <div class="shop-section-title">Anwendungen & Webshop</div>
     <div class="cashback-grid">${realCards}</div>
@@ -1682,7 +1682,7 @@ function renderMysteryBox(){
     <div class="mystery-box__icon mystery-box__icon--shake">🎰</div>
     <div class="mystery-box__body">
       <div class="mystery-box__title">Tägliches Glücksrad</div>
-      <div class="mystery-box__desc">Dreh für 30 – 200 Bonus-Punkte. Einmal pro Tag.</div>
+      <div class="mystery-box__desc">Dreh für 15 – 100 Bonus-Punkte. Einmal pro Tag.</div>
     </div>
     <button class="mystery-box__cta" id="mysterySpinBtn">Drehen</button>
   `;
@@ -1693,13 +1693,13 @@ function spinMystery(){
   const today = new Date().toDateString();
   if(state.mysteryLastDate === today) return;
   if(isFrostiSleeping()) return;
-  // Weighted random: 50% chance 30-60, 35% 60-120, 12% 120-180, 3% 180-200
+  // Weighted random — kleinere Beträge, ~0.04–0.20 € Wert
   const r = Math.random();
   let reward;
-  if(r < .5) reward = 30 + Math.floor(Math.random() * 31);
-  else if(r < .85) reward = 60 + Math.floor(Math.random() * 61);
-  else if(r < .97) reward = 120 + Math.floor(Math.random() * 61);
-  else reward = 180 + Math.floor(Math.random() * 21);
+  if(r < .55) reward = 15 + Math.floor(Math.random() * 16);  // 15–30
+  else if(r < .88) reward = 30 + Math.floor(Math.random() * 31);  // 30–60
+  else if(r < .98) reward = 60 + Math.floor(Math.random() * 31);  // 60–90
+  else reward = 90 + Math.floor(Math.random() * 11);  // 90–100
 
   awardPoints(reward, "visit"); // mystery counts as engagement bonus
   state.mysteryLastDate = today;
@@ -2173,7 +2173,7 @@ function bindEvents(){
   window.__settingsHandlers.aboutBtn = function(){
     showInfoModal({
       title: "Über Frosti", icon: "❄️",
-      body: "Freezeclub · Frosti ist deine digitale Cryo-Begleiter-App.\n\nMit jedem Besuch im Studio (Kältekammer, Lymphdrainage, 4D-Bodyscan) sammelst du Eis-Punkte. Diese kannst du als Cashback einlösen — 200 Pkt = 1 € Rabatt.\n\nFrosti wächst von der Frostknospe bis zum Polarchampion. Bleib dran!\n\n© 2026 Freezeclub Balingen",
+      body: "Freezeclub · Frosti ist deine digitale Cryo-Begleiter-App.\n\nMit jedem Besuch im Studio (Kältekammer, Lymphdrainage, 4D-Bodyscan) sammelst du Eis-Punkte. Diese kannst du als Cashback einlösen — 500 Pkt = 1 € Rabatt.\n\nFrosti wächst von der Frostknospe bis zum Polarchampion. Bleib dran!\n\n© 2026 Freezeclub Balingen",
     });
   };
   window.__settingsHandlers.privacyBtn = function(){
@@ -2340,7 +2340,7 @@ function bindEvents(){
     showInfoModal({
       title: "Über Frosti",
       icon: "❄️",
-      body: "Freezeclub · Frosti ist deine digitale Cryo-Begleiter-App.\n\nMit jedem Besuch im Studio (Kältekammer, Lymphdrainage, 4D-Bodyscan) sammelst du Eis-Punkte. Diese kannst du als Cashback einlösen — 200 Pkt = 1 € Rabatt.\n\nFrosti wächst von der Frostknospe bis zum Polarchampion. Bleib dran!\n\n© 2026 Freezeclub Balingen",
+      body: "Freezeclub · Frosti ist deine digitale Cryo-Begleiter-App.\n\nMit jedem Besuch im Studio (Kältekammer, Lymphdrainage, 4D-Bodyscan) sammelst du Eis-Punkte. Diese kannst du als Cashback einlösen — 500 Pkt = 1 € Rabatt.\n\nFrosti wächst von der Frostknospe bis zum Polarchampion. Bleib dran!\n\n© 2026 Freezeclub Balingen",
     });
   });
 

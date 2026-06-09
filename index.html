@@ -54,7 +54,7 @@
       </header>
 
       <div class="onb-deck" id="onboardingDeck">
-        <!-- Slide 1: Welcome with big Frosti -->
+        <!-- Slide 1: Welcome -->
         <article class="onb-slide is-active" data-step="0">
           <div class="onb-art onb-art--hero">
             <div class="onb-art__bg onb-art__bg--blue"></div>
@@ -63,19 +63,23 @@
               <span style="--x:82%;--y:24%;--d:.5s">✦</span>
               <span style="--x:8%;--y:62%;--d:.8s">✺</span>
               <span style="--x:88%;--y:70%;--d:1.1s">❄</span>
-              <span style="--x:50%;--y:8%;--d:.3s">✧</span>
             </div>
             <div class="onb-art__frosti" id="onboardingAvatar"></div>
           </div>
-          <h1 class="onb-title">Hi, ich bin Frosti!</h1>
-          <p class="onb-text">Dein digitaler Begleiter im Freezeclub. Ich wachse mit jedem deiner Besuche – und du bekommst echte Rabatte zurück.</p>
+          <h1 class="onb-title">Hi, ich bin Frosti.</h1>
+          <p class="onb-text">Dein Cryo-Begleiter. Ich wachse mit jedem Studio-Besuch — und du bekommst echtes Geld zurück.</p>
+          <div class="onb-pill-row">
+            <span class="onb-pill">🏆 Level-Up</span>
+            <span class="onb-pill">💰 Cashback</span>
+            <span class="onb-pill">🎁 Goodies</span>
+          </div>
         </article>
 
         <!-- Slide 2: Avatar-Auswahl -->
         <article class="onb-slide" data-step="1">
-          <span class="slide__badge">Charakter wählen</span>
-          <h1 class="onb-title">Welcher Frosti bist du?</h1>
-          <p class="onb-text">Vier Persönlichkeiten zur Auswahl. Tippe einen an.</p>
+          <span class="slide__badge">1 / 4 Charaktere</span>
+          <h1 class="onb-title">Wähl deinen Frosti.</h1>
+          <p class="onb-text">Tippe einen an. Später nicht mehr änderbar.</p>
           <div class="onb-presets">
             <button type="button" class="onb-preset is-selected" data-preset="frost">
               <img src="./assets/avatars/frost-1.png" alt="" draggable="false">
@@ -100,25 +104,24 @@
           </div>
         </article>
 
-        <!-- Slide 3: Sammle Eis-Punkte → Rabatt -->
+        <!-- Slide 3: Punkte sammeln -->
         <article class="onb-slide" data-step="2">
           <div class="onb-art onb-art--equation">
             <div class="point-eq">
               <div class="point-eq__chip point-eq__chip--blue">
-                <span class="point-eq__chip-num">100</span>
+                <span class="point-eq__chip-num">500</span>
                 <span class="point-eq__chip-lbl">Eis-Punkte</span>
               </div>
               <div class="point-eq__op">=</div>
               <div class="point-eq__chip point-eq__chip--gold">
                 <span class="point-eq__chip-num">1 €</span>
-                <span class="point-eq__chip-lbl">Rabatt</span>
+                <span class="point-eq__chip-lbl">Cashback</span>
               </div>
             </div>
-            <div class="point-eq__sub">direkt einlösbar bei Anwendungen & Webshop</div>
           </div>
-          <h1 class="onb-title">Sammle Punkte,<br>spare echtes Geld.</h1>
-          <p class="onb-text">Bei jeder Anwendung sammelst du Eis-Punkte. Lös sie sofort gegen Rabatt ein – auf Kältekammer, Webshop oder Mitgliedschaft.</p>
-          <div class="onb-service-grid">
+          <h1 class="onb-title">Punkte = Geld.</h1>
+          <p class="onb-text">Jede Studio-Anwendung bringt Punkte. Einlösbar als Rabatt auf Kältekammer, Merch und Mitgliedschaft.</p>
+          <div class="onb-service-grid onb-service-grid--compact">
             <div class="onb-svc"><span class="onb-svc__icon">❄</span><div><div class="onb-svc__name">Kältekammer</div><div class="onb-svc__pts">+100 Pkt</div></div></div>
             <div class="onb-svc"><span class="onb-svc__icon">≋</span><div><div class="onb-svc__name">Lymphdrainage</div><div class="onb-svc__pts">+75 Pkt</div></div></div>
             <div class="onb-svc"><span class="onb-svc__icon">◉</span><div><div class="onb-svc__name">4D-Bodyscan</div><div class="onb-svc__pts">+150 Pkt</div></div></div>
@@ -138,7 +141,11 @@
             </div>
           </div>
           <h1 class="onb-title">Frosti wächst mit dir.</h1>
-          <p class="onb-text">Jede Stufe gibt eine neue Krone, neue Items und exklusive Saison-Belohnungen. Vom kleinen Frostknospe bis zum Polarchampion.</p>
+          <p class="onb-text">5 Stufen vom Frostknospe bis zum Polarchampion. Jede Stufe schaltet neue Krone & Belohnungen frei.</p>
+          <div class="onb-warn">
+            <span class="onb-warn__icon">💤</span>
+            <span class="onb-warn__text">Nach 14 Tagen ohne Studio-Besuch schläft Frosti — keine Punkte mehr bis zum nächsten Termin.</span>
+          </div>
         </article>
 
         <!-- Slide 5: Wochenziel -->
@@ -154,15 +161,15 @@
               <div class="onb-week__day is-closed"><span>So</span><div class="onb-week__dot">−</div></div>
             </div>
           </div>
-          <h1 class="onb-title">Dein Tempo,<br>deine Regeln.</h1>
-          <p class="onb-text">Wie oft willst du im Freezeclub vorbeikommen? Wähle dein realistisches Wochenziel.</p>
+          <h1 class="onb-title">Wie oft kommst du?</h1>
+          <p class="onb-text">Wähl dein Wochenziel — realistisch ist besser als ambitioniert.</p>
           <div class="onb-goals">
             <button type="button" class="onb-goal" data-weekgoal="1"><span class="onb-goal__num">1×</span><span class="onb-goal__lbl">Entspannt</span></button>
             <button type="button" class="onb-goal is-selected" data-weekgoal="2"><span class="onb-goal__num">2×</span><span class="onb-goal__lbl">Empfohlen</span></button>
             <button type="button" class="onb-goal" data-weekgoal="3"><span class="onb-goal__num">3×</span><span class="onb-goal__lbl">Ambitioniert</span></button>
             <button type="button" class="onb-goal" data-weekgoal="4"><span class="onb-goal__num">4×</span><span class="onb-goal__lbl">Elite</span></button>
           </div>
-          <p class="onb-hint">Sonntags ist geschlossen — wird nicht mitgezählt. +100 Pkt Bonus, sobald du dein Ziel erreichst.</p>
+          <p class="onb-hint">Sonntags ist geschlossen. +100 Pkt Bonus pro erreichtes Ziel.</p>
         </article>
 
         <!-- Slide 6: Account erstellen -->
@@ -171,11 +178,11 @@
             <div class="onb-art__bg onb-art__bg--peach"></div>
             <div class="onb-bonus">
               <div class="onb-bonus__num">+200</div>
-              <div class="onb-bonus__lbl">Eis-Punkte Willkommensbonus</div>
+              <div class="onb-bonus__lbl">Willkommens-Punkte</div>
             </div>
           </div>
-          <h1 class="onb-title">Fast geschafft!</h1>
-          <p class="onb-text">Sag uns nur kurz, wer du bist – und Frosti ist bereit.</p>
+          <h1 class="onb-title">Fast geschafft.</h1>
+          <p class="onb-text">Kurz vorstellen — dann kann's losgehen.</p>
           <form id="onboardingForm" class="onb-form">
             <label class="onb-field">
               <span class="onb-field__lbl">Vorname</span>
@@ -275,7 +282,7 @@
         <section class="earn-section">
           <header class="earn-section__head">
             <h3 class="earn-section__title">So sammelst du Eis-Punkte</h3>
-            <span class="earn-section__sub">200 Pkt = 1 € Rabatt</span>
+            <span class="earn-section__sub">500 Pkt = 1 € Rabatt</span>
           </header>
           <div class="earn-grid" id="earnGrid"></div>
         </section>
@@ -351,7 +358,7 @@
             </div>
             <div class="balance-card__pts">
               <span id="shopPoints">0</span> Pkt
-              <span class="balance-card__rate">200 Pkt = 1 €</span>
+              <span class="balance-card__rate">500 Pkt = 1 €</span>
             </div>
           </div>
         </article>

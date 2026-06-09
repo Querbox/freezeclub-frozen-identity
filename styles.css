@@ -189,7 +189,10 @@ body::before{
   position: relative;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 22px 24px;
+  padding: 0 20px 16px;
+}
+@media (max-width: 360px){
+  .onb-deck{ padding: 0 16px 14px }
 }
 .onb-slide{
   display: none;
@@ -203,16 +206,23 @@ body::before{
   to  { opacity: 1; transform: none }
 }
 
-/* Hero art container — smaller, less dominant */
+/* Hero art container — compact, mobile-first */
 .onb-art{
   position: relative;
   aspect-ratio: 1/1;
-  max-height: 24vh;
-  margin: 4px auto 18px;
-  width: 100%; max-width: 220px;
-  border-radius: 22px;
+  max-height: 22vh;
+  margin: 0 auto 16px;
+  width: 100%; max-width: 200px;
+  border-radius: 20px;
   overflow: hidden;
   display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+@media (max-height: 720px){
+  .onb-art{ max-height: 18vh; max-width: 160px; margin-bottom: 12px }
+}
+@media (max-height: 620px){
+  .onb-art{ max-height: 15vh; max-width: 130px; margin-bottom: 10px }
 }
 .onb-art__bg{
   position: absolute; inset: 0; z-index: 0;
@@ -259,19 +269,23 @@ body::before{
 /* Slide title + text */
 .onb-title{
   font-family: var(--sans);
-  font-weight: 700;
-  font-size: clamp(28px, 5.5vw, 36px);
-  letter-spacing: -.025em;
+  font-weight: 800;
+  font-size: clamp(22px, 6.5vw, 30px);
+  letter-spacing: -.03em;
   line-height: 1.1;
   color: var(--ink);
-  margin: 0 0 10px;
+  margin: 0 0 8px;
 }
 .onb-text{
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--ink-2);
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   max-width: 420px;
+}
+@media (max-height: 720px){
+  .onb-title{ font-size: clamp(20px, 5.5vw, 26px); margin-bottom: 6px }
+  .onb-text{ font-size: 13px; margin-bottom: 12px }
 }
 
 /* Slide 2: 100 Pkt = 1 € equation */
@@ -310,10 +324,49 @@ body::before{
   font-weight: 500;
 }
 
+/* Welcome pill row */
+.onb-pill-row{
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 4px;
+}
+.onb-pill{
+  background: var(--brand-soft);
+  color: var(--brand);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -.005em;
+}
+
+/* Sleep-warning callout */
+.onb-warn{
+  background: linear-gradient(135deg, #fff5e0, #ffe9c3);
+  border: 1px solid rgba(180,120,40,.15);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-top: 4px;
+}
+.onb-warn__icon{
+  font-size: 20px; line-height: 1;
+  flex-shrink: 0;
+}
+.onb-warn__text{
+  font-size: 12px;
+  color: #6a4f1a;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -.005em;
+}
+
 /* Slide 2: service grid */
 .onb-service-grid{
   display: flex; flex-direction: column; gap: 8px;
 }
+.onb-service-grid--compact{ gap: 6px }
+.onb-service-grid--compact .onb-svc{ padding: 10px 12px }
+.onb-service-grid--compact .onb-svc__icon{ width: 32px; height: 32px; font-size: 16px }
 .onb-svc{
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;
@@ -405,10 +458,16 @@ body::before{
   position: relative;
 }
 .onb-preset img{
-  width: 70px; height: 70px;
+  width: 60px; height: 60px;
   object-fit: contain;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   pointer-events: none;
+}
+@media (max-height: 720px), (max-width: 360px){
+  .onb-preset img{ width: 50px; height: 50px }
+  .onb-preset{ padding: 10px 6px 8px }
+  .onb-preset__name{ font-size: 12px }
+  .onb-preset__desc{ font-size: 10px }
 }
 .onb-preset__name{
   font-size: 13px; font-weight: 800; color: var(--ink);
@@ -461,10 +520,15 @@ body::before{
   font-size: 11px; font-weight: 800;
 }
 .onb-goal__num{
-  font-size: 28px; font-weight: 800; color: var(--brand);
+  font-size: 26px; font-weight: 800; color: var(--brand);
   letter-spacing: -.025em; line-height: 1;
 }
-.onb-goal__lbl{ font-size: 12px; font-weight: 700; color: var(--ink); letter-spacing: -.005em }
+.onb-goal__lbl{ font-size: 11px; font-weight: 700; color: var(--ink); letter-spacing: -.005em }
+@media (max-height: 720px), (max-width: 360px){
+  .onb-goal{ padding: 10px 8px }
+  .onb-goal__num{ font-size: 22px }
+  .onb-goal__lbl{ font-size: 10px }
+}
 .onb-hint{
   font-size: 12px; color: var(--ink-3);
   text-align: center; line-height: 1.5;
@@ -483,13 +547,18 @@ body::before{
 }
 .onb-bonus__num{
   font-family: var(--sans);
-  font-size: 56px; font-weight: 800;
+  font-size: 44px; font-weight: 800;
   color: var(--brand);
   letter-spacing: -.04em; line-height: 1;
 }
 .onb-bonus__lbl{
-  font-size: 13px; font-weight: 700; color: var(--ink);
-  margin-top: 4px;
+  font-size: 12px; font-weight: 700; color: var(--ink);
+  margin-top: 3px;
+}
+@media (max-height: 720px), (max-width: 360px){
+  .onb-bonus{ padding: 16px 22px }
+  .onb-bonus__num{ font-size: 36px }
+  .onb-bonus__lbl{ font-size: 11px }
 }
 .onb-form{
   display: flex; flex-direction: column; gap: 14px;
@@ -517,11 +586,14 @@ body::before{
 .onb-bottom{
   flex-shrink: 0;
   background: var(--bg-0);
-  padding: 14px 22px calc(env(safe-area-inset-bottom) + 14px);
-  display: flex; flex-direction: column; gap: 12px;
+  padding: 12px 20px calc(env(safe-area-inset-bottom) + 12px);
+  display: flex; flex-direction: column; gap: 10px;
   border-top: 1px solid var(--line);
   position: relative;
   z-index: 20;
+}
+@media (max-height: 620px){
+  .onb-bottom{ padding-top: 10px; gap: 8px }
 }
 .onb-dots{
   display: flex; gap: 8px; justify-content: center; align-items: center;
@@ -539,11 +611,14 @@ body::before{
 .onb-btn{
   appearance: none; border: 0; cursor: pointer;
   font: inherit; font-weight: 700;
-  border-radius: 14px;
-  padding: 16px 22px;
+  border-radius: 12px;
+  padding: 14px 18px;
   transition: all .2s ease;
   letter-spacing: -.005em;
   touch-action: manipulation;
+}
+@media (max-height: 620px){
+  .onb-btn{ padding: 12px 16px }
 }
 .onb-btn--back{
   flex: 0 0 56px;
