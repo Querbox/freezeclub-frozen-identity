@@ -693,6 +693,23 @@ function renderAll(animate=false){
   renderEarnGrid();
   renderChallengeList();
   renderSleepState();
+  updateBellDot();
+
+  // Notification & install labels in settings
+  const notifLabel = $("#notifLabel");
+  if(notifLabel){
+    let s = "Aus";
+    if("Notification" in window){
+      if(Notification.permission === "granted") s = state.notifsOn !== false ? "Aktiviert" : "Pausiert";
+      else if(Notification.permission === "denied") s = "Browser blockiert";
+    }
+    notifLabel.textContent = s;
+  }
+  const installLabel = $("#installLabel");
+  if(installLabel){
+    installLabel.textContent = (typeof isStandalone === "function" && isStandalone())
+      ? "Bereits installiert ✓" : "Als App installieren";
+  }
   renderEvolutionPath(currentLevel);
   renderCommunityChallenge();
   renderAvatarMeta();
@@ -1023,7 +1040,6 @@ function renderEntries(){
       <div class="entry__body">
         <div class="entry__title-row">
           <span class="entry__title">${esc(it.name)}</span>
-          <button class="entry__menu" aria-label="Menü">⋯</button>
         </div>
         <div class="entry__desc">${esc(it.desc)}</div>
         <div class="entry__foot">
@@ -1033,6 +1049,84 @@ function renderEntries(){
       </div>
     </article>
   `).join("");
+}
+
+function buildNotifications(){
+  const items = [];
+  const off = getOffPeakBonus();
+  if(off.active){
+    items.push({ icon: "⚡", title: "Off-Peak Bonus aktiv", desc: off.desc, tone: "warn" });
+  }
+  if(isFrostiSleeping()){
+    items.push({ icon: "💤", title: "Frosti schläft", desc: "Komm im Studio vorbei, um wieder Punkte zu sammeln.", tone: "sleep" });
+  } else {
+    const left = daysUntilSleep();
+    if(left > 0 && left <= 3){
+      items.push({ icon: "⏰", title: `Noch ${left} Tag${left===1?'':'e'} bis zum Schlaf`, desc: "Komm bald vorbei, sonst wird Frosti müde.", tone: "warn" });
+    }
+  }
+  const cb = getComebackStatus();
+  if(cb){
+    items.push({ icon: "💙", title: `${cb.discount} % Comeback-Rabatt`, desc: `Du warst ${cb.days} Tage nicht da. Code: ${cb.code}`, tone: "info" });
+  }
+  const article = getDailyArticle();
+  if(article && !isArticleReadToday()){
+    items.push({ icon: "📖", title: "Neue Wissens-Karte", desc: article.title, tone: "info" });
+  }
+  if(state.weekVisits >= state.weekGoal){
+    items.push({ icon: "🎯", title: "Wochenziel erreicht", desc: "Bonus wurde dir gutgeschrieben.", tone: "ok" });
+  }
+  return items;
+}
+
+function renderNotifications(){
+  const list = $("#notifList"); if(!list) return;
+  const items = buildNotifications();
+  if(items.length === 0){
+    list.innerHTML = `<div class="notif-empty">Keine neuen Benachrichtigungen.</div>`;
+    return;
+  }
+  list.innerHTML = items.map(n => `
+    <div class="notif-item notif-item--${n.tone}">
+      <div class="notif-item__icon">${esc(n.icon)}</div>
+      <div class="notif-item__body">
+        <div class="notif-item__title">${esc(n.title)}</div>
+        <div class="notif-item__desc">${esc(n.desc)}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function closeNotifications(){
+  const pop = $("#notifPop");
+  const scrim = $("#notifScrim");
+  if(pop) pop.classList.add("hidden");
+  if(scrim) scrim.classList.add("hidden");
+}
+
+function showInfoModal({ title, body, icon }){
+  const el = $("#modal");
+  if(!el) return;
+  $("#modalArt").textContent = icon || "ℹ️";
+  $("#modalEyebrow").textContent = "";
+  $("#modalEyebrow").style.display = "none";
+  $("#modalTitle").textContent = title;
+  const descEl = $("#modalDesc");
+  if(descEl){
+    descEl.innerHTML = String(body || "").split(/\n\n+/).map(p => `<p>${esc(p)}</p>`).join("");
+  }
+  el.classList.add("is-show");
+  setTimeout(() => {
+    $("#modalEyebrow").style.display = "";
+  }, 100);
+}
+
+function updateBellDot(){
+  const dot = $("#bellDot"); if(!dot) return;
+  const items = buildNotifications();
+  const lastSeen = state.notifsLastSeen || 0;
+  const hasNew = items.length > 0 && (Date.now() - lastSeen > 60000);
+  dot.classList.toggle("hidden", !hasNew);
 }
 
 function renderSleepState(){
@@ -1639,11 +1733,152 @@ function bindEvents(){
     renderAll();
   });
 
+  $("#notifBtn")?.addEventListener("click", async () => {
+    if(!("Notification" in window)){
+      toast("Dein Browser unterstützt keine Push-Benachrichtigungen");
+      return;
+    }
+    if(Notification.permission === "granted"){
+      state.notifsOn = !state.notifsOn;
+      save();
+      toast(`Push-Benachrichtigungen ${state.notifsOn ? 'aktiviert' : 'pausiert'}`);
+      renderAll();
+      return;
+    }
+    if(Notification.permission === "denied"){
+      toast("In den Browser-Einstellungen zulassen", 3500);
+      return;
+    }
+    const result = await Notification.requestPermission();
+    if(result === "granted"){
+      state.notifsOn = true; save();
+      toast("Push-Benachrichtigungen aktiviert ✓");
+      renderAll();
+    }
+  });
+
+  $("#updateBtn")?.addEventListener("click", async () => {
+    toast("Prüfe auf Updates …", 2000);
+    if(!("serviceWorker" in navigator)){
+      toast("Kein Update-Mechanismus verfügbar"); return;
+    }
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if(!reg){ toast("Kein Service Worker gefunden"); return; }
+      await reg.update();
+      // Force-reload, state in localStorage persists
+      setTimeout(() => {
+        if(reg.waiting){
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
+        toast("Lade neueste Version …", 1500);
+        setTimeout(() => location.reload(), 800);
+      }, 600);
+    } catch(e){
+      toast("Update fehlgeschlagen — bitte später erneut");
+    }
+  });
+
+  $("#installBtnSettings")?.addEventListener("click", () => {
+    if(isStandalone()){
+      toast("Du nutzt bereits die installierte App ✓");
+      return;
+    }
+    if(_deferredInstallPrompt){
+      _deferredInstallPrompt.prompt();
+      _deferredInstallPrompt.userChoice.then(() => {
+        _deferredInstallPrompt = null;
+      });
+      return;
+    }
+    if(isIOSSafari()){
+      showInfoModal({
+        title: "Auf iPhone installieren",
+        body: "1. Tippe unten auf das Teilen-Symbol ⎙\n\n2. Wähle „Zum Home-Bildschirm“\n\n3. Bestätige mit „Hinzufügen“",
+        icon: "📱",
+      });
+      return;
+    }
+    showInfoModal({
+      title: "Installation",
+      body: "Öffne das Browser-Menü und wähle „App installieren“ oder „Zum Home-Bildschirm hinzufügen“.",
+      icon: "📱",
+    });
+  });
+
+  $("#aboutBtn")?.addEventListener("click", () => {
+    showInfoModal({
+      title: "Über Frosti",
+      icon: "❄️",
+      body: "Freezeclub · Frosti ist deine digitale Cryo-Begleiter-App.\n\nMit jedem Besuch im Studio (Kältekammer, Lymphdrainage, 4D-Bodyscan) sammelst du Eis-Punkte. Diese kannst du als Cashback einlösen — 200 Pkt = 1 € Rabatt.\n\nFrosti wächst von der Frostknospe bis zum Polarchampion. Bleib dran!\n\n© 2026 Freezeclub Balingen",
+    });
+  });
+
+  $("#privacyBtn")?.addEventListener("click", () => {
+    const visits = state.visits || 0;
+    const redemptions = (state.redemptions || []).length;
+    showInfoModal({
+      title: "Datenschutz",
+      icon: "🔒",
+      body: `Was wir speichern:\n\n• Vorname (von dir eingegeben)\n• Punkte- und Besuchsstand\n• Avatar-Einstellungen\n• Gelesene Wissens-Karten\n• Einlöse-Codes (${redemptions})\n\nWo es gespeichert wird:\n\nNur lokal in deinem Browser (LocalStorage). Keine Übertragung an Server, kein Tracking, keine Cookies von Drittanbietern.\n\nDu hast volle Kontrolle:\n\n• Daten jederzeit exportieren\n• Konto zurücksetzen (Punkte weg)\n• Alle Daten löschen (kompletter Wipe)\n\nFür Studio-Buchungen und Code-Einlösung gilt zusätzlich die Datenschutzerklärung von freezeclub.de.`,
+    });
+  });
+
+  $("#exportBtn")?.addEventListener("click", () => {
+    try {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `freezeclub-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast("Backup heruntergeladen ✓");
+    } catch(e){
+      toast("Export fehlgeschlagen");
+    }
+  });
+
   $("#resetBtn")?.addEventListener("click", () => {
-    if(!confirm("Wirklich zurücksetzen? Alle Punkte und Items gehen verloren.")) return;
+    if(!confirm("Wirklich zurücksetzen? Alle Punkte und Items gehen verloren.\nDein Browser-Cache und installierte App bleiben.")) return;
     localStorage.removeItem(STORAGE_KEY);
     location.reload();
   });
+
+  $("#deleteAllBtn")?.addEventListener("click", async () => {
+    if(!confirm("ALLE Daten löschen?\n\n• LocalStorage-Daten weg\n• Service-Worker-Cache geleert\n• App muss neu geladen werden\n\nFortfahren?")) return;
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if("serviceWorker" in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for(const r of regs) await r.unregister();
+      }
+      if("caches" in window){
+        const keys = await caches.keys();
+        for(const k of keys) await caches.delete(k);
+      }
+      toast("Alle Daten gelöscht. Lade neu …", 2000);
+      setTimeout(() => location.reload(), 1200);
+    } catch(e){
+      toast("Fehler beim vollständigen Löschen");
+    }
+  });
+
+  // Notifications popover
+  $("#bellBtn")?.addEventListener("click", () => {
+    const pop = $("#notifPop");
+    const scrim = $("#notifScrim");
+    renderNotifications();
+    pop.classList.remove("hidden");
+    scrim.classList.remove("hidden");
+    state.notifsLastSeen = Date.now();
+    save();
+    setTimeout(() => renderAll(), 50);
+  });
+  $("#notifClose")?.addEventListener("click", closeNotifications);
+  $("#notifScrim")?.addEventListener("click", closeNotifications);
 }
 
 /* ---------- Boot ---------- */

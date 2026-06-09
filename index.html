@@ -196,16 +196,11 @@
             <div class="top-header__avatar-frosti" id="topHeaderAvatar"></div>
           </button>
           <div class="top-header__date">
-            <button class="top-header__chev" aria-label="Vorheriger Tag">
-              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <span class="top-header__date-label">Heute</span>
-            <button class="top-header__chev" aria-label="Nächster Tag">
-              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
+            <span class="top-header__date-label" id="dateLabel">Heute</span>
           </div>
-          <button class="top-header__bell" aria-label="Benachrichtigungen">
+          <button class="top-header__bell" id="bellBtn" aria-label="Benachrichtigungen">
             <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9zM9 21a3 3 0 0 0 6 0" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="top-header__bell-dot hidden" id="bellDot"></span>
           </button>
         </header>
 
@@ -375,8 +370,16 @@
         <div hidden><div id="editorAvatar"></div><div id="editorControls"></div></div>
 
         <section class="section">
-          <header class="section__head"><h3 class="section__title">Einstellungen</h3></header>
+          <header class="section__head"><h3 class="section__title">Präferenzen</h3></header>
           <div class="settings-list">
+            <button class="setting-row" id="weekGoalBtn">
+              <div class="setting-row__icon">🎯</div>
+              <div class="setting-row__meta">
+                <span class="setting-row__name">Wochenziel</span>
+                <span class="setting-row__sub"><span id="weekGoalLabel">2</span>× pro Woche</span>
+              </div>
+              <span class="setting-row__chev">›</span>
+            </button>
             <button class="setting-row" id="soundBtn">
               <div class="setting-row__icon">🔊</div>
               <div class="setting-row__meta">
@@ -385,11 +388,63 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row" id="weekGoalBtn">
-              <div class="setting-row__icon">🎯</div>
+            <button class="setting-row" id="notifBtn">
+              <div class="setting-row__icon">🔔</div>
               <div class="setting-row__meta">
-                <span class="setting-row__name">Wochenziel</span>
-                <span class="setting-row__sub"><span id="weekGoalLabel">2</span>× pro Woche</span>
+                <span class="setting-row__name">Push-Benachrichtigungen</span>
+                <span class="setting-row__sub" id="notifLabel">Aus</span>
+              </div>
+              <span class="setting-row__chev">›</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="section">
+          <header class="section__head"><h3 class="section__title">App</h3></header>
+          <div class="settings-list">
+            <button class="setting-row" id="updateBtn">
+              <div class="setting-row__icon">🔄</div>
+              <div class="setting-row__meta">
+                <span class="setting-row__name">Auf Updates prüfen</span>
+                <span class="setting-row__sub" id="updateLabel">App-Version v4.0</span>
+              </div>
+              <span class="setting-row__chev">›</span>
+            </button>
+            <button class="setting-row" id="installBtnSettings">
+              <div class="setting-row__icon">📱</div>
+              <div class="setting-row__meta">
+                <span class="setting-row__name">Zum Home-Bildschirm</span>
+                <span class="setting-row__sub" id="installLabel">Als App installieren</span>
+              </div>
+              <span class="setting-row__chev">›</span>
+            </button>
+            <button class="setting-row" id="aboutBtn">
+              <div class="setting-row__icon">ℹ️</div>
+              <div class="setting-row__meta">
+                <span class="setting-row__name">Über Frosti</span>
+                <span class="setting-row__sub">App-Info und Lizenz</span>
+              </div>
+              <span class="setting-row__chev">›</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="section">
+          <header class="section__head"><h3 class="section__title">Daten & Datenschutz</h3></header>
+          <div class="settings-list">
+            <button class="setting-row" id="privacyBtn">
+              <div class="setting-row__icon">🔒</div>
+              <div class="setting-row__meta">
+                <span class="setting-row__name">Datenschutz</span>
+                <span class="setting-row__sub">Was wir speichern</span>
+              </div>
+              <span class="setting-row__chev">›</span>
+            </button>
+            <button class="setting-row" id="exportBtn">
+              <div class="setting-row__icon">⬇️</div>
+              <div class="setting-row__meta">
+                <span class="setting-row__name">Daten exportieren</span>
+                <span class="setting-row__sub">Backup als JSON-Datei</span>
               </div>
               <span class="setting-row__chev">›</span>
             </button>
@@ -401,8 +456,18 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
+            <button class="setting-row setting-row--danger" id="deleteAllBtn">
+              <div class="setting-row__icon">🗑️</div>
+              <div class="setting-row__meta">
+                <span class="setting-row__name">Alle Daten löschen</span>
+                <span class="setting-row__sub">Vollständige Bereinigung inkl. Cache</span>
+              </div>
+              <span class="setting-row__chev">›</span>
+            </button>
           </div>
         </section>
+
+        <p class="settings-footer">Freezeclub Frosti · v4.0 · 🇩🇪 Made in Germany</p>
       </section>
 
       <!-- LEADERBOARD -->
@@ -434,6 +499,16 @@
         <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="9" r="4" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
       </button>
     </nav>
+
+    <!-- Notifications dropdown -->
+    <div class="notif-pop hidden" id="notifPop">
+      <header class="notif-pop__head">
+        <h4>Benachrichtigungen</h4>
+        <button class="notif-pop__close" id="notifClose" aria-label="Schließen">×</button>
+      </header>
+      <div class="notif-pop__list" id="notifList"></div>
+    </div>
+    <div class="notif-pop__scrim hidden" id="notifScrim"></div>
 
     <!-- Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
