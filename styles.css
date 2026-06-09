@@ -992,6 +992,11 @@ body::before{
   .part-row__value{ font-size: 16px }
   .nav-btn{ width: 38px; height: 38px }
 
+  /* Home Frosti on mobile */
+  .home-frosti{ padding: 14px; gap: 12px; border-radius: 18px; margin-bottom: 14px }
+  .home-frosti__name{ font-size: 20px }
+  .home-frosti__rank{ font-size: 10px }
+
   /* Earn cards on mobile */
   .earn-section{ margin-bottom: 18px }
   .earn-grid{ gap: 8px }
@@ -1985,6 +1990,109 @@ body::before{
 }
 .goal-tile__label{ font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: -.005em }
 .goal-tile__hint{ font-size: 11px; color: var(--ink-3); margin-top: 2px }
+
+/* ===== HOME FROSTI (big avatar back on home) ===== */
+.home-frosti{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+  transition: opacity .4s ease;
+}
+.home-frosti__stage{
+  aspect-ratio: 1/1 !important;
+  background: linear-gradient(160deg, #e7f1f9 0%, #cee1ee 100%) !important;
+  border-radius: 18px;
+  border: 0;
+  position: relative; overflow: hidden;
+  margin: 0;
+  display: flex; align-items: flex-end; justify-content: center;
+  transition: filter .5s ease;
+}
+.home-frosti__stage::before, .home-frosti__stage::after{ display: none }
+.home-frosti__stage .avatar-stage__avatar{ width: 92%; max-height: 95% }
+
+/* Sleeping state */
+.home-frosti__stage.is-sleeping{
+  background: linear-gradient(160deg, #1c2a3a 0%, #0e1726 100%) !important;
+  filter: brightness(.85);
+}
+.home-frosti__stage.is-sleeping .avatar-stage__avatar{
+  filter: brightness(.7) saturate(.6);
+}
+.home-frosti__zzz{
+  position: absolute; top: 12%; right: 14%;
+  z-index: 10;
+  display: flex; gap: 2px; align-items: flex-end;
+  pointer-events: none;
+}
+.home-frosti__zzz span{
+  font-family: var(--sans); font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,.4);
+  animation: zzzFloat 2.5s ease-in-out infinite;
+}
+.home-frosti__zzz span:nth-child(1){ font-size: 14px; animation-delay: 0s }
+.home-frosti__zzz span:nth-child(2){ font-size: 20px; animation-delay: .5s }
+.home-frosti__zzz span:nth-child(3){ font-size: 28px; animation-delay: 1s }
+@keyframes zzzFloat{
+  0%, 100%{ transform: translateY(0); opacity: .5 }
+  50%    { transform: translateY(-8px); opacity: 1 }
+}
+
+.home-frosti__meta{ display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.home-frosti__rank{
+  display: inline-block; align-self: flex-start;
+  background: var(--brand-soft); color: var(--brand);
+  padding: 3px 9px; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: -.005em;
+}
+.home-frosti__name{
+  margin: 6px 0 2px;
+  font-family: var(--sans); font-weight: 800;
+  font-size: 24px; letter-spacing: -.028em;
+  color: var(--ink); line-height: 1.05;
+}
+.home-frosti__status{
+  margin: 0 0 8px;
+  font-size: 11px; color: var(--ink-3);
+  font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+  letter-spacing: -.005em;
+}
+.status-dot{
+  width: 7px; height: 7px; border-radius: 50%;
+  display: inline-block;
+}
+.status-dot--ok{ background: #4caf7a; box-shadow: 0 0 6px rgba(76,175,122,.5) }
+.status-dot--warn{ background: #e6a847 }
+.status-dot--sleep{ background: #5d7e96; animation: pulseSleep 2s ease-in-out infinite }
+@keyframes pulseSleep{ 50%{ opacity: .4 } }
+
+.home-frosti__level{
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px; color: var(--ink-2);
+}
+.home-frosti__level strong{ color: var(--ink); font-weight: 800 }
+.home-frosti__level .dim{ color: var(--ink-3); font-variant-numeric: tabular-nums }
+.home-frosti__bar{
+  height: 5px; background: var(--surface-2);
+  border-radius: 3px; overflow: hidden; margin-top: 4px;
+}
+.home-frosti__fill{
+  height: 100%; width: 0%; border-radius: 3px;
+  background: linear-gradient(90deg, #4d8568, #a3d977);
+  transition: width 1s cubic-bezier(.2,.7,.2,1);
+}
+
+.home-frosti.is-sleeping .home-frosti__name,
+.home-frosti.is-sleeping .home-frosti__rank{ opacity: .7 }
 
 /* ===== "So sammelst du Punkte" — primary earn section ===== */
 .earn-section{ margin-bottom: 22px }

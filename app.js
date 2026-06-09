@@ -226,6 +226,46 @@ function getOffPeakBonus(){
   return { active: false, multiplier: 1 };
 }
 
+/* ===== Sleeping Frosti Detection =====
+   Frosti schläft, wenn 14+ Tage seit letztem Studio-Besuch.
+   Im Schlaf können KEINE Punkte aus Wissens-Karten oder Challenges gewonnen werden —
+   nur ein echter Studio-Besuch (bookService) weckt Frosti wieder auf. */
+const SLEEP_AFTER_DAYS = 14;
+const SLEEP_NEW_USER_GRACE_DAYS = 7;
+
+function isFrostiSleeping(){
+  const lastVisitTs = state.lastVisitDate ? new Date(state.lastVisitDate).getTime() : null;
+  const createdTs = state.createdAt ? new Date(state.createdAt).getTime() : Date.now();
+  const now = Date.now();
+  if(lastVisitTs){
+    const daysSinceVisit = (now - lastVisitTs) / 86400000;
+    return daysSinceVisit > SLEEP_AFTER_DAYS;
+  }
+  // Never visited — grace period after account creation
+  const daysSinceCreated = (now - createdTs) / 86400000;
+  return daysSinceCreated > SLEEP_NEW_USER_GRACE_DAYS;
+}
+
+function daysUntilSleep(){
+  const lastVisitTs = state.lastVisitDate ? new Date(state.lastVisitDate).getTime() : null;
+  if(!lastVisitTs) return SLEEP_NEW_USER_GRACE_DAYS;
+  const days = (Date.now() - lastVisitTs) / 86400000;
+  return Math.max(0, Math.floor(SLEEP_AFTER_DAYS - days));
+}
+
+/* Central award helper: blocks point gain when Frosti is sleeping
+   (except 'visit' source which always works and wakes Frosti). */
+function awardPoints(amount, source){
+  if(amount <= 0) return 0;
+  if(source !== "visit" && isFrostiSleeping()){
+    return 0; // sleeping — no points from this source
+  }
+  state.points += amount;
+  state.seasonPoints += amount;
+  state.totalPoints += amount;
+  return amount;
+}
+
 /* ===== Comeback Detection ===== */
 function getComebackStatus(){
   if(!state.lastVisitDate) return null;
@@ -652,6 +692,7 @@ function renderAll(animate=false){
   renderEntries();
   renderEarnGrid();
   renderChallengeList();
+  renderSleepState();
   renderEvolutionPath(currentLevel);
   renderCommunityChallenge();
   renderAvatarMeta();
@@ -885,14 +926,17 @@ function openArticle(articleId){
     art: article.icon,
   });
   if(!wasRead){
-    state.points += article.reward;
-    state.seasonPoints += article.reward;
-    state.totalPoints += article.reward;
     state.lastArticleRead = { date: new Date().toDateString(), articleId };
     if(!state.readArticles.includes(articleId)) state.readArticles.push(articleId);
+    const granted = awardPoints(article.reward, "article");
     save();
-    sfx("point");
-    setTimeout(() => toast(`+${article.reward} Pkt für die Wissens-Karte`), 800);
+    if(granted > 0){
+      sfx("point");
+      setTimeout(() => toast(`+${granted} Pkt für die Wissens-Karte`), 800);
+    } else {
+      // Frosti schläft — keine Punkte, aber Toast informiert
+      setTimeout(() => toast(`Frosti schläft 💤 Komm vorbei, um wieder Punkte zu sammeln.`, 3500), 800);
+    }
     renderAll(true);
   }
 }
@@ -989,6 +1033,29 @@ function renderEntries(){
       </div>
     </article>
   `).join("");
+}
+
+function renderSleepState(){
+  const sleeping = isFrostiSleeping();
+  const stageEl = document.querySelector(".home-frosti__stage");
+  const zzz = $("#frostiZzz");
+  const status = $("#frostiStatus");
+  const homeFrosti = document.querySelector(".home-frosti");
+  if(stageEl) stageEl.classList.toggle("is-sleeping", sleeping);
+  if(homeFrosti) homeFrosti.classList.toggle("is-sleeping", sleeping);
+  if(zzz) zzz.hidden = !sleeping;
+  if(status){
+    if(sleeping){
+      status.innerHTML = '<span class="status-dot status-dot--sleep"></span> Schläft — Studio-Besuch zum Aufwecken';
+    } else {
+      const daysLeft = daysUntilSleep();
+      if(daysLeft <= 5 && daysLeft > 0){
+        status.innerHTML = `<span class="status-dot status-dot--warn"></span> Wird in ${daysLeft} Tag${daysLeft===1?'':'en'} müde`;
+      } else {
+        status.innerHTML = '<span class="status-dot status-dot--ok"></span> Wach und bereit';
+      }
+    }
+  }
 }
 
 function renderEarnGrid(){
@@ -1289,11 +1356,15 @@ function bookService(id, evtTarget){
 
   const oldLevel = Math.floor(state.seasonPoints / LEVEL_STEP) + 1;
 
-  state.points += pts;
-  state.seasonPoints += pts;
-  state.totalPoints += pts;
+  // Studio visit = always award + wake Frosti
+  const wasSleeping = isFrostiSleeping();
+  state.lastVisitDate = new Date().toISOString();  // wake first
+  awardPoints(pts, "visit");
   state.visits += 1;
   state.counts[id] = (state.counts[id]||0) + 1;
+  if(wasSleeping){
+    setTimeout(() => toast("Frosti ist aufgewacht! 🌟", 3000), 1200);
+  }
 
   // Weekly streak logic (Sundays don't count, weekly goal-based)
   const now = new Date();
@@ -1309,11 +1380,11 @@ function bookService(id, evtTarget){
     state.weekVisits = 0;
   }
   state.weekVisits += 1;
-  state.lastVisitDate = now.toISOString();
+  // lastVisitDate already set above
 
   // Bonus when weekly goal first reached
   if(state.weekVisits === state.weekGoal){
-    state.points += 100; state.seasonPoints += 100; state.totalPoints += 100;
+    awardPoints(100, "visit");
     setTimeout(() => toast(`Wochenziel erreicht · +100 Bonus`, 3200), 800);
   }
 
@@ -1343,9 +1414,7 @@ function bumpChallenge(c, by){
   const next = prev + by;
   state.challengeProgress[c.id] = next;
   if(prev < c.goal && next >= c.goal){
-    state.points += c.reward;
-    state.seasonPoints += c.reward;
-    state.totalPoints += c.reward;
+    awardPoints(c.reward, "visit");
     setTimeout(() => {
       sfx("achievement");
       toast(`MISSION COMPLETE: ${c.title} · +${c.reward} Punkte`, 3500);
