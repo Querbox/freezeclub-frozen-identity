@@ -221,6 +221,219 @@ document.addEventListener("click", function(e){
 }, true); // capture phase for highest priority
 
 // ============================================================
+// GLOBAL SETTINGS ACTIONS — bulletproof, called via inline onclick
+// These are self-contained and don't rely on bindEvents
+// ============================================================
+window.fcSound = function(){
+  try {
+    if(typeof state === "undefined") return;
+    state.soundOn = !state.soundOn;
+    if(typeof save === "function") save();
+    if(state.soundOn && typeof sfx === "function") sfx("click");
+    if(typeof toast === "function") toast(state.soundOn ? "Soundeffekte aktiviert" : "Soundeffekte aus");
+    if(typeof renderAll === "function") renderAll();
+  } catch(err){ console.error(err); }
+};
+
+window.fcWeekGoal = function(){
+  try {
+    if(typeof state === "undefined") return;
+    var next = ((state.weekGoal || 2) % 4) + 1;
+    state.weekGoal = next;
+    if(typeof save === "function") save();
+    if(typeof sfx === "function") sfx("click");
+    if(typeof toast === "function") toast("Wochenziel: " + next + "× pro Woche");
+    if(typeof renderAll === "function") renderAll();
+  } catch(err){ console.error(err); }
+};
+
+window.fcNotif = async function(){
+  try {
+    if(!("Notification" in window)){
+      if(typeof toast === "function") toast("Browser unterstützt keine Push-Benachrichtigungen");
+      return;
+    }
+    if(Notification.permission === "granted"){
+      state.notifsOn = !state.notifsOn;
+      if(typeof save === "function") save();
+      if(typeof toast === "function") toast("Push-Benachrichtigungen " + (state.notifsOn ? "aktiviert" : "pausiert"));
+      if(typeof renderAll === "function") renderAll();
+      return;
+    }
+    if(Notification.permission === "denied"){
+      if(typeof toast === "function") toast("In den Browser-Einstellungen zulassen", 3500);
+      return;
+    }
+    try {
+      var result = await Notification.requestPermission();
+      if(result === "granted"){
+        state.notifsOn = true;
+        if(typeof save === "function") save();
+        if(typeof toast === "function") toast("Push-Benachrichtigungen aktiviert ✓");
+        if(typeof renderAll === "function") renderAll();
+      }
+    } catch(err){
+      if(typeof toast === "function") toast("Permission konnte nicht angefragt werden");
+    }
+  } catch(err){ console.error(err); }
+};
+
+window.fcUpdate = async function(){
+  try {
+    if(typeof toast === "function") toast("Prüfe auf Updates …", 2000);
+    if(!("serviceWorker" in navigator)){
+      if(typeof toast === "function") toast("Kein Update-Mechanismus verfügbar");
+      return;
+    }
+    var reg = await navigator.serviceWorker.getRegistration();
+    if(!reg){
+      if(typeof toast === "function") toast("Kein Service Worker registriert");
+      return;
+    }
+    await reg.update();
+    setTimeout(function(){
+      if(reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      if(typeof toast === "function") toast("Lade neueste Version …", 1500);
+      setTimeout(function(){ location.reload(); }, 800);
+    }, 600);
+  } catch(err){
+    if(typeof toast === "function") toast("Update fehlgeschlagen");
+  }
+};
+
+window.fcInstall = function(){
+  try {
+    if(typeof isStandalone === "function" && isStandalone()){
+      if(typeof toast === "function") toast("Du nutzt bereits die installierte App ✓");
+      return;
+    }
+    if(_deferredInstallPrompt){
+      _deferredInstallPrompt.prompt();
+      _deferredInstallPrompt.userChoice.then(function(){ _deferredInstallPrompt = null; });
+      return;
+    }
+    var iOS = /iPhone|iPad|iPod/.test(navigator.userAgent || "");
+    var info = iOS
+      ? { title: "Auf iPhone installieren", body: "1. Tippe unten auf das Teilen-Symbol\n\n2. Wähle „Zum Home-Bildschirm“\n\n3. Bestätige mit „Hinzufügen“", icon: "📱" }
+      : { title: "Installation", body: "Öffne das Browser-Menü und wähle „App installieren“ oder „Zum Home-Bildschirm hinzufügen“.", icon: "📱" };
+    if(typeof showInfoModal === "function") showInfoModal(info);
+  } catch(err){ console.error(err); }
+};
+
+window.fcAbout = function(){
+  try {
+    if(typeof showInfoModal !== "function") return;
+    showInfoModal({
+      title: "Über Frosti", icon: "❄️",
+      body: "Freezeclub · Frosti ist deine digitale Cryo-Begleiter-App.\n\nMit jedem Studio-Besuch sammelst du Eis-Punkte (Kältekammer, Lymphdrainage, 4D-Bodyscan). Diese kannst du als Cashback einlösen — 500 Pkt = 1 € Rabatt.\n\nFrosti wächst von der Frostknospe bis zum Polarchampion. Bleib dran!\n\n© 2026 Freezeclub Balingen",
+    });
+  } catch(err){ console.error(err); }
+};
+
+window.fcPrivacy = function(){
+  try {
+    if(typeof showInfoModal !== "function") return;
+    var redemptions = (state.redemptions || []).length;
+    showInfoModal({
+      title: "Datenschutz", icon: "🔒",
+      body: "Was wir speichern:\n\n• Vorname (von dir eingegeben)\n• Punkte- und Besuchsstand\n• Avatar-Einstellungen\n• Gelesene Wissens-Karten\n• Einlöse-Codes (" + redemptions + ")\n\nWo es gespeichert wird:\n\nNur lokal in deinem Browser (LocalStorage). Keine Übertragung an Server, kein Tracking, keine Cookies von Drittanbietern.\n\nDu hast volle Kontrolle:\n\n• Daten jederzeit exportieren\n• Konto zurücksetzen\n• Alle Daten löschen",
+    });
+  } catch(err){ console.error(err); }
+};
+
+window.fcExport = function(){
+  try {
+    var data = JSON.stringify(state, null, 2);
+    var blob = new Blob([data], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "freezeclub-" + new Date().toISOString().slice(0,10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    if(typeof toast === "function") toast("Backup heruntergeladen ✓");
+  } catch(err){
+    if(typeof toast === "function") toast("Export fehlgeschlagen");
+  }
+};
+
+window.fcReset = function(){
+  if(!confirm("Wirklich zurücksetzen? Alle Punkte und Items gehen verloren.\nBrowser-Cache und installierte App bleiben.")) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+  location.reload();
+};
+
+window.fcDeleteAll = async function(){
+  if(!confirm("ALLE Daten löschen?\n\n• LocalStorage-Daten weg\n• Service-Worker-Cache geleert\n• App muss neu geladen werden\n\nFortfahren?")) return;
+  try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
+  try {
+    if("serviceWorker" in navigator){
+      var regs = await navigator.serviceWorker.getRegistrations();
+      for(var i = 0; i < regs.length; i++) await regs[i].unregister();
+    }
+    if("caches" in window){
+      var keys = await caches.keys();
+      for(var j = 0; j < keys.length; j++) await caches.delete(keys[j]);
+    }
+  } catch(e){}
+  if(typeof toast === "function") toast("Alle Daten gelöscht. Lade neu …", 2000);
+  setTimeout(function(){ location.reload(); }, 1200);
+};
+
+window.fcBell = function(){
+  try {
+    var pop = document.getElementById("notifPop");
+    var scrim = document.getElementById("notifScrim");
+    if(!pop || !scrim) return;
+    if(typeof renderNotifications === "function") renderNotifications();
+    pop.classList.remove("hidden");
+    scrim.classList.remove("hidden");
+    state.notifsLastSeen = Date.now();
+    if(typeof save === "function") save();
+    setTimeout(function(){ if(typeof renderAll === "function") renderAll(); }, 50);
+  } catch(err){ console.error(err); }
+};
+
+window.fcDebug = function(){
+  try {
+    window.__debugClicks = !window.__debugClicks;
+    state.debugMode = window.__debugClicks;
+    if(typeof save === "function") save();
+    var lbl = document.getElementById("debugLabel");
+    if(lbl) lbl.textContent = window.__debugClicks ? "An — Klicks werden geloggt" : "Aus";
+    if(typeof toast === "function") toast(window.__debugClicks ? "Debug-Modus an" : "Debug-Modus aus");
+  } catch(err){ console.error(err); }
+};
+
+window.fcDiag = function(){
+  try {
+    if(typeof showInfoModal !== "function") return;
+    var errors = (window.__errors || []).slice(-5);
+    var errorList = errors.length === 0
+      ? "Keine Fehler aufgezeichnet."
+      : errors.map(function(e, i){ return (i+1) + ". " + e.msg + (e.source ? " (" + e.source.split("/").pop() + ":" + e.line + ")" : ""); }).join("\n\n");
+    var lvl = (typeof LEVEL_STEP === "number") ? Math.floor((state.seasonPoints || 0) / LEVEL_STEP) : "?";
+    var preset = (state.avatar && state.avatar.preset) || "—";
+    var asleep = (typeof isFrostiSleeping === "function") ? isFrostiSleeping() : false;
+    var summary = [
+      "Version: v5.1",
+      "Online: " + (navigator.onLine ? "ja" : "nein"),
+      "Standalone: " + (typeof isStandalone === "function" && isStandalone() ? "ja" : "nein"),
+      "Service-Worker: " + ("serviceWorker" in navigator ? "verfügbar" : "nicht verfügbar"),
+      "Notifications: " + (("Notification" in window) ? Notification.permission : "n/a"),
+      "Storage: ~" + Math.round(JSON.stringify(state).length / 1024) + " KB",
+      "Punkte: " + (state.points || 0) + " | Besuche: " + (state.visits || 0) + " | Level: " + lvl,
+      "Frosti: " + preset + " · " + (asleep ? "schläft 💤" : "wach ☀️"),
+      "Letzte Fehler: " + (window.__errors || []).length,
+      "",
+      "—— FEHLERPROTOKOLL ——",
+      errorList,
+    ].join("\n");
+    showInfoModal({ title: "Diagnose", icon: "📋", body: summary });
+  } catch(err){ console.error(err); }
+};
+
+// ============================================================
 // Global error + debug infrastructure
 // ============================================================
 window.__errors = [];

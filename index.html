@@ -235,7 +235,7 @@
           <div class="top-header__date">
             <span class="top-header__date-label" id="dateLabel">Heute</span>
           </div>
-          <button class="top-header__bell" id="bellBtn" aria-label="Benachrichtigungen">
+          <button class="top-header__bell" id="bellBtn" type="button" onclick="fcBell()" aria-label="Benachrichtigungen">
             <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9zM9 21a3 3 0 0 0 6 0" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span class="top-header__bell-dot hidden" id="bellDot"></span>
           </button>
@@ -434,7 +434,7 @@
         <section class="section">
           <header class="section__head"><h3 class="section__title">Präferenzen</h3></header>
           <div class="settings-list">
-            <button class="setting-row" id="weekGoalBtn">
+            <button class="setting-row" id="weekGoalBtn" type="button" onclick="fcWeekGoal()">
               <div class="setting-row__icon">🎯</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Wochenziel</span>
@@ -442,7 +442,7 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row" id="soundBtn">
+            <button class="setting-row" id="soundBtn" type="button" onclick="fcSound()">
               <div class="setting-row__icon">🔊</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Soundeffekte</span>
@@ -450,7 +450,7 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row" id="notifBtn">
+            <button class="setting-row" id="notifBtn" type="button" onclick="fcNotif()">
               <div class="setting-row__icon">🔔</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Push-Benachrichtigungen</span>
@@ -464,15 +464,15 @@
         <section class="section">
           <header class="section__head"><h3 class="section__title">App</h3></header>
           <div class="settings-list">
-            <button class="setting-row" id="updateBtn">
+            <button class="setting-row" id="updateBtn" type="button" onclick="fcUpdate()">
               <div class="setting-row__icon">🔄</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Auf Updates prüfen</span>
-                <span class="setting-row__sub" id="updateLabel">App-Version v4.0</span>
+                <span class="setting-row__sub" id="updateLabel">App-Version v5.1</span>
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row" id="installBtnSettings">
+            <button class="setting-row" id="installBtnSettings" type="button" onclick="fcInstall()">
               <div class="setting-row__icon">📱</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Zum Home-Bildschirm</span>
@@ -480,7 +480,7 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row" id="aboutBtn">
+            <button class="setting-row" id="aboutBtn" type="button" onclick="fcAbout()">
               <div class="setting-row__icon">ℹ️</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Über Frosti</span>
@@ -494,7 +494,7 @@
         <section class="section">
           <header class="section__head"><h3 class="section__title">Daten & Datenschutz</h3></header>
           <div class="settings-list">
-            <button class="setting-row" id="privacyBtn">
+            <button class="setting-row" id="privacyBtn" type="button" onclick="fcPrivacy()">
               <div class="setting-row__icon">🔒</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Datenschutz</span>
@@ -502,7 +502,7 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row" id="exportBtn">
+            <button class="setting-row" id="exportBtn" type="button" onclick="fcExport()">
               <div class="setting-row__icon">⬇️</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Daten exportieren</span>
@@ -510,7 +510,7 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row setting-row--danger" id="resetBtn">
+            <button class="setting-row setting-row--danger" id="resetBtn" type="button" onclick="fcReset()">
               <div class="setting-row__icon">⚠️</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Konto zurücksetzen</span>
@@ -518,7 +518,7 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row setting-row--danger" id="deleteAllBtn">
+            <button class="setting-row setting-row--danger" id="deleteAllBtn" type="button" onclick="fcDeleteAll()">
               <div class="setting-row__icon">🗑️</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Alle Daten löschen</span>
@@ -532,7 +532,7 @@
         <section class="section">
           <header class="section__head"><h3 class="section__title">Entwickler</h3></header>
           <div class="settings-list">
-            <button class="setting-row" id="debugBtn">
+            <button class="setting-row" id="debugBtn" type="button" onclick="fcDebug()">
               <div class="setting-row__icon">🐛</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Debug-Modus</span>
@@ -540,7 +540,7 @@
               </div>
               <span class="setting-row__chev">›</span>
             </button>
-            <button class="setting-row" id="diagBtn">
+            <button class="setting-row" id="diagBtn" type="button" onclick="fcDiag()">
               <div class="setting-row__icon">📋</div>
               <div class="setting-row__meta">
                 <span class="setting-row__name">Diagnose</span>
@@ -551,7 +551,7 @@
           </div>
         </section>
 
-        <p class="settings-footer">Freezeclub Frosti · v5.0 · 🇩🇪 Made in Germany</p>
+        <p class="settings-footer">Freezeclub Frosti · v5.1 · 🇩🇪 Made in Germany</p>
       </section>
 
       <!-- LEADERBOARD -->
