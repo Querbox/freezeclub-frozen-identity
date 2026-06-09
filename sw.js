@@ -1,5 +1,5 @@
 /* Freezeclub Service Worker — offline-first, simple cache */
-const VERSION = "v4.6";
+const VERSION = "v4.7";
 const CACHE = `freezeclub-${VERSION}`;
 const ASSETS = [
   "./",

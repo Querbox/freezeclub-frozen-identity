@@ -430,7 +430,7 @@ function getDailyArticle(){
   return articles[dayIdx % articles.length];
 }
 function isArticleReadToday(){
-  if(!state.lastArticleRead) return false;
+  if(!state.lastArticleRead || typeof state.lastArticleRead !== "object") return false;
   return state.lastArticleRead.date === new Date().toDateString();
 }
 
@@ -762,7 +762,7 @@ function hashString(s){ let h=0; for(let i=0;i<s.length;i++){ h = ((h<<5)-h) + s
 /* ---------- Animated counter ---------- */
 function animateNumber(el, to, dur=800){
   if(!el) return;
-  const from = parseInt((el.textContent||"0").replace(/\D/g,"")) || 0;
+  const from = parseInt((el.textContent||"0").replace(/\D/g,""), 10) || 0;
   if(from === to){ el.textContent = to.toLocaleString("de-DE"); return; }
   const start = performance.now();
   el.classList.add("is-rolling");
@@ -871,7 +871,8 @@ function renderAll(animate=false){
   $("#userId").textContent = state.userId;
   renderQR($("#qrCode"), state.userId);
 
-  $("#services").innerHTML = SERVICES.map(s => `
+  const svcEl = $("#services");
+  if(svcEl) svcEl.innerHTML = SERVICES.map(s => `
     <div class="service">
       <div class="service__info">
         <span class="service__name">${esc(s.icon)} ${esc(s.name)}</span>
@@ -919,7 +920,8 @@ function renderAll(animate=false){
 
   renderShop();
 
-  $("#achievementsList").innerHTML = ACHIEVEMENTS.map(a => {
+  const achEl = $("#achievementsList");
+  if(achEl) achEl.innerHTML = ACHIEVEMENTS.map(a => {
     const got = a.test(state);
     return `<li class="ach ${got?'':'is-locked'}">
       <span class="ach__icon">${esc(a.icon)}</span>
@@ -927,8 +929,9 @@ function renderAll(animate=false){
     </li>`;
   }).join("");
 
-  $("#challengesList").innerHTML = CHALLENGES.map(c => {
-    const prog = state.challengeProgress[c.id] || 0;
+  const challEl = $("#challengesList");
+  if(challEl) challEl.innerHTML = CHALLENGES.map(c => {
+    const prog = (state.challengeProgress || {})[c.id] || 0;
     const pct = Math.min(100, prog/c.goal*100);
     const done = prog >= c.goal;
     return `<article class="challenge ${done?'is-done':''}">
@@ -952,7 +955,8 @@ function renderAll(animate=false){
   const myRank = fullList.findIndex(u => u.me) + 1;
   const qaRank = $("#qaRank"); if(qaRank) qaRank.textContent = `Platz ${myRank} von ${fullList.length}`;
   const list = fullList.slice(0, 12);
-  $("#leaderboardList").innerHTML = list.map((u,i)=>`
+  const lbEl = $("#leaderboardList");
+  if(lbEl) lbEl.innerHTML = list.map((u,i)=>`
     <li class="${u.me?'is-me':''}">
       <span class="rank">${String(i+1).padStart(2,'0')}</span>
       <span class="lb-name">${esc(u.name)}</span>
@@ -1099,6 +1103,7 @@ function openArticle(articleId){
   });
   if(!wasRead){
     state.lastArticleRead = { date: new Date().toDateString(), articleId };
+    if(!Array.isArray(state.readArticles)) state.readArticles = [];
     if(!state.readArticles.includes(articleId)) state.readArticles.push(articleId);
     const granted = awardPoints(article.reward, "article");
     save();
@@ -1497,7 +1502,7 @@ function renderShop(filter){
 
   // Branch 3: "Alle" — show real products first, then digital
   const realCards = REAL_PRODUCTS.map(renderCashbackCard).join("");
-  const digitalItems = SHOP_ITEMS.filter(i => !shopMode === "inventory" ? true : state.inventory.includes(i.id));
+  const digitalItems = SHOP_ITEMS.filter(i => shopMode !== "inventory" ? true : (state.inventory || []).includes(i.id));
   const digitalCards = digitalItems.map(renderDigitalCard).join("");
   grid.innerHTML = `
     <div class="cashback-info">
@@ -1574,7 +1579,7 @@ function redeemDiscount(productId){
 
   // Generate redemption code
   const code = (p.id.toUpperCase().replace(/[-_]/g,"") + "-" + Math.random().toString(36).slice(2,6).toUpperCase());
-  state.redemptions = state.redemptions || [];
+  if(!Array.isArray(state.redemptions)) state.redemptions = [];
   state.redemptions.push({ id: productId, code, points: d.points, euro: d.euro, date: new Date().toISOString() });
   save();
 
@@ -1894,6 +1899,7 @@ function bookService(id, evtTarget){
 }
 
 function bumpChallenge(c, by){
+  if(!state.challengeProgress || typeof state.challengeProgress !== "object") state.challengeProgress = {};
   const prev = state.challengeProgress[c.id] || 0;
   const next = prev + by;
   state.challengeProgress[c.id] = next;
@@ -1908,6 +1914,7 @@ function bumpChallenge(c, by){
 
 function checkAchievements(){
   for(const a of ACHIEVEMENTS){
+    if(!Array.isArray(state.unlockedAchievements)) state.unlockedAchievements = [];
     if(a.test(state) && !state.unlockedAchievements.includes(a.id)){
       state.unlockedAchievements.push(a.id);
       save();
@@ -2138,11 +2145,15 @@ function bindEvents(){
       toast("In den Browser-Einstellungen zulassen", 3500);
       return;
     }
-    const result = await Notification.requestPermission();
-    if(result === "granted"){
-      state.notifsOn = true; save();
-      toast("Push-Benachrichtigungen aktiviert ✓");
-      renderAll();
+    try {
+      const result = await Notification.requestPermission();
+      if(result === "granted"){
+        state.notifsOn = true; save();
+        toast("Push-Benachrichtigungen aktiviert ✓");
+        renderAll();
+      }
+    } catch(err){
+      toast("Permission konnte nicht angefragt werden", 3000);
     }
   };
   window.__settingsHandlers.updateBtn = async function(){
@@ -2281,11 +2292,15 @@ function bindEvents(){
       toast("In den Browser-Einstellungen zulassen", 3500);
       return;
     }
-    const result = await Notification.requestPermission();
-    if(result === "granted"){
-      state.notifsOn = true; save();
-      toast("Push-Benachrichtigungen aktiviert ✓");
-      renderAll();
+    try {
+      const result = await Notification.requestPermission();
+      if(result === "granted"){
+        state.notifsOn = true; save();
+        toast("Push-Benachrichtigungen aktiviert ✓");
+        renderAll();
+      }
+    } catch(err){
+      toast("Permission konnte nicht angefragt werden", 3000);
     }
   });
 
@@ -2510,6 +2525,14 @@ function boot(){
     state.equipped = { accessoire: null, background: null };
     save();
   }
+  // Robust state migrations — heal partial/old states
+  if(!Array.isArray(state.inventory)) state.inventory = [];
+  if(!Array.isArray(state.readArticles)) state.readArticles = [];
+  if(!Array.isArray(state.redemptions)) state.redemptions = [];
+  if(!Array.isArray(state.unlockedAchievements)) state.unlockedAchievements = [];
+  if(!state.counts || typeof state.counts !== "object") state.counts = {};
+  if(!state.challengeProgress || typeof state.challengeProgress !== "object") state.challengeProgress = {};
+  if(!state.equipped || typeof state.equipped !== "object") state.equipped = { accessoire: null, background: null };
   // Engagement migrations
   if(state.debugMode === true) window.__debugClicks = true;
   if(state.lastArticleRead === undefined) state.lastArticleRead = null;
