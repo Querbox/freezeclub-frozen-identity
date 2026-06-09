@@ -6,7 +6,7 @@
 // Attached BEFORE anything else so even if other code fails, clicks work.
 // ============================================================
 var __onbSlide = 0;
-var __onbTotal = 5;
+var __onbTotal = 6;
 
 function __onbGoTo(idx){
   idx = Math.max(0, Math.min(__onbTotal - 1, idx));
@@ -43,7 +43,10 @@ function completeOnboarding(){
     state.weekGoalChosen = true;
   }
   state.onboarded = true;
-  state.avatar = (window.defaultAvatar ? window.defaultAvatar() : { preset: "frost", accessory: null, background: null });
+  // Pick chosen preset from onboarding slide
+  var chosenPreset = document.querySelector(".onb-preset.is-selected");
+  var presetId = chosenPreset ? chosenPreset.dataset.preset : "frost";
+  state.avatar = { preset: presetId, accessory: null, background: null };
   state.points = 200; state.totalPoints = 200; state.seasonPoints = 200;
   if(typeof save === "function") save();
   if(typeof ensureAudio === "function") ensureAudio();
@@ -66,8 +69,50 @@ function __switchView(name){
   window.scrollTo({ top: 0, behavior: "smooth" });
   return true;
 }
+// Settings actions (capture-phase: bulletproof)
+function __setting(id){
+  return function(e){
+    if(e.target.closest && e.target.closest("#"+id)){
+      e.preventDefault();
+      if(typeof window.__settingsHandlers === "object" && window.__settingsHandlers[id]) window.__settingsHandlers[id]();
+      return true;
+    }
+    return false;
+  };
+}
+window.__settingsHandlers = {};
+
 document.addEventListener("click", function(e){
   if(!e.target.closest) return;
+  // Onboarding preset selection
+  var preset = e.target.closest(".onb-preset[data-preset]");
+  if(preset){
+    document.querySelectorAll(".onb-preset").forEach(function(p){ p.classList.remove("is-selected"); });
+    preset.classList.add("is-selected");
+    e.preventDefault();
+    return;
+  }
+  // Onboarding goal-tile selection
+  var goal = e.target.closest("[data-weekgoal]");
+  if(goal){
+    document.querySelectorAll(".onb-goal, .goal-tile").forEach(function(g){ g.classList.remove("is-selected"); });
+    goal.classList.add("is-selected");
+    e.preventDefault();
+    return;
+  }
+  // Settings buttons (delegated) — stop legacy handlers to avoid double-trigger
+  var settingsIds = ["soundBtn","weekGoalBtn","notifBtn","updateBtn","installBtnSettings","aboutBtn","privacyBtn","exportBtn","resetBtn","deleteAllBtn","bellBtn","notifClose","notifScrim"];
+  for(var i = 0; i < settingsIds.length; i++){
+    if(e.target.closest("#"+settingsIds[i])){
+      if(window.__settingsHandlers[settingsIds[i]]){
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        window.__settingsHandlers[settingsIds[i]]();
+        return;
+      }
+    }
+  }
   // Shop section tabs
   var shopTab = e.target.closest("[data-shopsection]");
   if(shopTab){
@@ -1966,22 +2011,134 @@ function bindEvents(){
   $("#modalClose").addEventListener("click", () => { sfx("click"); hideModal(); });
   $("#modal").addEventListener("click", (e) => { if(e.target.id === "modal") hideModal(); });
 
-  $("#soundBtn")?.addEventListener("click", () => {
+  // === Settings handlers registered globally for capture-phase delegation ===
+  window.__settingsHandlers.soundBtn = function(){
     state.soundOn = !state.soundOn;
     save();
     if(state.soundOn) sfx("click");
     renderAll();
-  });
-
-  $("#weekGoalBtn")?.addEventListener("click", () => {
+  };
+  window.__settingsHandlers.weekGoalBtn = function(){
     const next = ((state.weekGoal || 2) % 4) + 1;
     state.weekGoal = next;
     save();
     sfx("click");
     toast(`Wochenziel: ${next}× pro Woche`);
     renderAll();
-  });
+  };
+  window.__settingsHandlers.notifBtn = async function(){
+    if(!("Notification" in window)){
+      toast("Dein Browser unterstützt keine Push-Benachrichtigungen");
+      return;
+    }
+    if(Notification.permission === "granted"){
+      state.notifsOn = !state.notifsOn;
+      save();
+      toast(`Push-Benachrichtigungen ${state.notifsOn ? 'aktiviert' : 'pausiert'}`);
+      renderAll();
+      return;
+    }
+    if(Notification.permission === "denied"){
+      toast("In den Browser-Einstellungen zulassen", 3500);
+      return;
+    }
+    const result = await Notification.requestPermission();
+    if(result === "granted"){
+      state.notifsOn = true; save();
+      toast("Push-Benachrichtigungen aktiviert ✓");
+      renderAll();
+    }
+  };
+  window.__settingsHandlers.updateBtn = async function(){
+    toast("Prüfe auf Updates …", 2000);
+    if(!("serviceWorker" in navigator)){ toast("Kein Update-Mechanismus verfügbar"); return; }
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if(!reg){ toast("Kein Service Worker gefunden"); return; }
+      await reg.update();
+      setTimeout(() => {
+        if(reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        toast("Lade neueste Version …", 1500);
+        setTimeout(() => location.reload(), 800);
+      }, 600);
+    } catch(e){ toast("Update fehlgeschlagen — bitte später erneut"); }
+  };
+  window.__settingsHandlers.installBtnSettings = function(){
+    if(isStandalone()){ toast("Du nutzt bereits die installierte App ✓"); return; }
+    if(_deferredInstallPrompt){
+      _deferredInstallPrompt.prompt();
+      _deferredInstallPrompt.userChoice.then(() => { _deferredInstallPrompt = null; });
+      return;
+    }
+    if(isIOSSafari()){
+      showInfoModal({ title: "Auf iPhone installieren", body: "1. Tippe unten auf das Teilen-Symbol ⎙\n\n2. Wähle „Zum Home-Bildschirm“\n\n3. Bestätige mit „Hinzufügen“", icon: "📱" });
+      return;
+    }
+    showInfoModal({ title: "Installation", body: "Öffne das Browser-Menü und wähle „App installieren“ oder „Zum Home-Bildschirm hinzufügen“.", icon: "📱" });
+  };
+  window.__settingsHandlers.aboutBtn = function(){
+    showInfoModal({
+      title: "Über Frosti", icon: "❄️",
+      body: "Freezeclub · Frosti ist deine digitale Cryo-Begleiter-App.\n\nMit jedem Besuch im Studio (Kältekammer, Lymphdrainage, 4D-Bodyscan) sammelst du Eis-Punkte. Diese kannst du als Cashback einlösen — 200 Pkt = 1 € Rabatt.\n\nFrosti wächst von der Frostknospe bis zum Polarchampion. Bleib dran!\n\n© 2026 Freezeclub Balingen",
+    });
+  };
+  window.__settingsHandlers.privacyBtn = function(){
+    const redemptions = (state.redemptions || []).length;
+    showInfoModal({
+      title: "Datenschutz", icon: "🔒",
+      body: `Was wir speichern:\n\n• Vorname (von dir eingegeben)\n• Punkte- und Besuchsstand\n• Avatar-Einstellungen\n• Gelesene Wissens-Karten\n• Einlöse-Codes (${redemptions})\n\nWo es gespeichert wird:\n\nNur lokal in deinem Browser (LocalStorage). Keine Übertragung an Server, kein Tracking, keine Cookies von Drittanbietern.\n\nDu hast volle Kontrolle:\n\n• Daten jederzeit exportieren\n• Konto zurücksetzen (Punkte weg)\n• Alle Daten löschen (kompletter Wipe)\n\nFür Studio-Buchungen und Code-Einlösung gilt zusätzlich die Datenschutzerklärung von freezeclub.de.`,
+    });
+  };
+  window.__settingsHandlers.exportBtn = function(){
+    try {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `freezeclub-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast("Backup heruntergeladen ✓");
+    } catch(e){ toast("Export fehlgeschlagen"); }
+  };
+  window.__settingsHandlers.resetBtn = function(){
+    if(!confirm("Wirklich zurücksetzen? Alle Punkte und Items gehen verloren.\nDein Browser-Cache und installierte App bleiben.")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  };
+  window.__settingsHandlers.deleteAllBtn = async function(){
+    if(!confirm("ALLE Daten löschen?\n\n• LocalStorage-Daten weg\n• Service-Worker-Cache geleert\n• App muss neu geladen werden\n\nFortfahren?")) return;
+    try {
+      localStorage.clear(); sessionStorage.clear();
+      if("serviceWorker" in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for(const r of regs) await r.unregister();
+      }
+      if("caches" in window){
+        const keys = await caches.keys();
+        for(const k of keys) await caches.delete(k);
+      }
+      toast("Alle Daten gelöscht. Lade neu …", 2000);
+      setTimeout(() => location.reload(), 1200);
+    } catch(e){ toast("Fehler beim vollständigen Löschen"); }
+  };
+  window.__settingsHandlers.bellBtn = function(){
+    const pop = $("#notifPop"); const scrim = $("#notifScrim");
+    if(pop && scrim){
+      renderNotifications();
+      pop.classList.remove("hidden");
+      scrim.classList.remove("hidden");
+      state.notifsLastSeen = Date.now();
+      save();
+      setTimeout(() => renderAll(), 50);
+    }
+  };
+  window.__settingsHandlers.notifClose = closeNotifications;
+  window.__settingsHandlers.notifScrim = closeNotifications;
 
+  // Legacy passthroughs (kept harmless)
+  $("#soundBtn")?.addEventListener("click", () => {});
+  $("#weekGoalBtn")?.addEventListener("click", () => {});
   $("#notifBtn")?.addEventListener("click", async () => {
     if(!("Notification" in window)){
       toast("Dein Browser unterstützt keine Push-Benachrichtigungen");
