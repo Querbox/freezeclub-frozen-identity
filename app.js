@@ -101,7 +101,7 @@ document.addEventListener("click", function(e){
     return;
   }
   // Settings buttons (delegated) — stop legacy handlers to avoid double-trigger
-  var settingsIds = ["soundBtn","weekGoalBtn","notifBtn","updateBtn","installBtnSettings","aboutBtn","privacyBtn","exportBtn","resetBtn","deleteAllBtn","bellBtn","notifClose","notifScrim"];
+  var settingsIds = ["soundBtn","weekGoalBtn","notifBtn","updateBtn","installBtnSettings","aboutBtn","privacyBtn","exportBtn","resetBtn","deleteAllBtn","bellBtn","notifClose","notifScrim","debugBtn","diagBtn","modalClose"];
   for(var i = 0; i < settingsIds.length; i++){
     if(e.target.closest("#"+settingsIds[i])){
       if(window.__settingsHandlers[settingsIds[i]]){
@@ -131,6 +131,40 @@ document.addEventListener("click", function(e){
   if(redeem){
     if(typeof redeemDiscount === "function") redeemDiscount(redeem.dataset.redeem);
     e.preventDefault();
+    return;
+  }
+  // Knowledge article
+  var artBtn = e.target.closest("[data-article]");
+  if(artBtn){
+    if(typeof openArticle === "function") openArticle(artBtn.dataset.article);
+    e.preventDefault();
+    return;
+  }
+  // Shop item buy / equip
+  var buyBtn = e.target.closest("[data-buy]");
+  if(buyBtn && !buyBtn.disabled){
+    if(typeof buyItem === "function") buyItem(buyBtn.dataset.buy);
+    e.preventDefault();
+    return;
+  }
+  var eqBtn = e.target.closest("[data-equip]");
+  if(eqBtn){
+    if(typeof equipItem === "function") equipItem(eqBtn.dataset.equip);
+    e.preventDefault();
+    return;
+  }
+  // Comeback claim
+  if(e.target.closest && e.target.closest("#claimComeback")){
+    try { navigator.clipboard && navigator.clipboard.writeText("WIRVERMISSENDICH"); } catch(_){}
+    if(typeof toast === "function") toast("Code kopiert: WIRVERMISSENDICH · 30 % Rabatt");
+    if(typeof state !== "undefined"){ state.comebackClaimedMonth = new Date().toISOString().slice(0,7); save && save(); }
+    if(typeof renderHomeBanners === "function") renderHomeBanners();
+    e.preventDefault();
+    return;
+  }
+  // Modal scrim click (outside content) → close
+  if(e.target.id === "modal"){
+    e.target.classList.remove("is-show");
     return;
   }
   // Critical: service booking — works even if bindEvents fails
@@ -186,9 +220,47 @@ document.addEventListener("click", function(e){
   }
 }, true); // capture phase for highest priority
 
+// ============================================================
+// Global error + debug infrastructure
+// ============================================================
+window.__errors = [];
+function __reportError(msg, source, line, col, err){
+  var entry = { msg: String(msg), source: source || "", line: line || 0, col: col || 0, time: Date.now(), stack: err && err.stack ? err.stack : "" };
+  window.__errors.push(entry);
+  if(window.__errors.length > 50) window.__errors.shift();
+  try {
+    if(typeof toast === "function"){
+      toast("⚠️ Fehler: " + String(msg).slice(0, 80), 4000);
+    }
+  } catch(e){}
+  try { console.error("[Freezeclub]", msg, source ? "at " + source + ":" + line : "", err); } catch(e){}
+}
 window.addEventListener("error", function(e){
-  console.error("[Freezeclub error]", e.message, "at", e.filename + ":" + e.lineno);
+  __reportError(e.message, e.filename, e.lineno, e.colno, e.error);
 });
+window.addEventListener("unhandledrejection", function(e){
+  __reportError("Unhandled Promise: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
+});
+
+// Debug click-trace
+window.__debugClicks = false;
+document.addEventListener("click", function(e){
+  if(!window.__debugClicks) return;
+  var t = e.target;
+  if(!t || !t.tagName) return;
+  var tag = t.tagName.toLowerCase();
+  var id = t.id ? "#" + t.id : "";
+  var cls = (t.className && typeof t.className === "string") ? "." + t.className.split(" ").filter(Boolean).slice(0, 3).join(".") : "";
+  var attrs = [];
+  ["data-tab","data-go","data-shopsection","data-preset","data-weekgoal","data-service","data-buy","data-redeem","data-article","data-equip"].forEach(function(a){
+    if(t.closest("["+a+"]")){ attrs.push(a+"="+t.closest("["+a+"]").getAttribute(a)); }
+  });
+  var info = tag + id + cls + (attrs.length ? "\n["+attrs.join(", ")+"]" : "");
+  try {
+    if(typeof toast === "function") toast("👆 " + info.slice(0, 80), 1800);
+  } catch(e2){}
+  try { console.log("[Click]", info, t); } catch(e2){}
+}, true);
 // ============================================================
 
 const STORAGE_KEY = "freezeclub.v2";
@@ -769,6 +841,7 @@ function renderAll(animate=false){
   renderGoodies();
   renderAnwendungen();
   renderMerch();
+  ensureShopTabHandlers();
 
   // Notification & install labels in settings
   const notifLabel = $("#notifLabel");
@@ -785,6 +858,8 @@ function renderAll(animate=false){
     installLabel.textContent = (typeof isStandalone === "function" && isStandalone())
       ? "Bereits installiert ✓" : "Als App installieren";
   }
+  const debugLabel = $("#debugLabel");
+  if(debugLabel) debugLabel.textContent = window.__debugClicks ? "An — Klicks werden geloggt" : "Aus";
   renderEvolutionPath(currentLevel);
   renderCommunityChallenge();
   renderAvatarMeta();
@@ -1519,9 +1594,28 @@ window.REAL_PRODUCTS = REAL_PRODUCTS;
 /* ===== Shop Sections (Challenges + Goodies + Anwendungen + Merch) ===== */
 let _shopSection = "challenges";
 function switchShopSection(name){
-  _shopSection = name;
-  document.querySelectorAll(".shop-tab").forEach(t => t.classList.toggle("is-active", t.dataset.shopsection === name));
-  document.querySelectorAll(".shop-pane").forEach(p => p.classList.toggle("is-active", p.dataset.pane === name));
+  try {
+    _shopSection = name;
+    var tabs = document.querySelectorAll(".shop-tab");
+    var panes = document.querySelectorAll(".shop-pane");
+    tabs.forEach(function(t){ t.classList.toggle("is-active", t.dataset.shopsection === name); });
+    panes.forEach(function(p){ p.classList.toggle("is-active", p.dataset.pane === name); });
+    if(window.__debugClicks) try { toast("Shop → " + name + " (tabs:" + tabs.length + " panes:" + panes.length + ")", 2000); } catch(e){}
+  } catch(err){
+    __reportError("switchShopSection failed: " + err.message, "", 0, 0, err);
+  }
+}
+
+// Redundancy: attach onclick directly to shop tabs each time we render
+function ensureShopTabHandlers(){
+  document.querySelectorAll(".shop-tab").forEach(function(btn){
+    if(btn.__bound) return;
+    btn.__bound = true;
+    btn.addEventListener("click", function(e){
+      e.preventDefault(); e.stopPropagation();
+      switchShopSection(btn.dataset.shopsection);
+    });
+  });
 }
 
 function renderShopBalance(){
@@ -2135,6 +2229,36 @@ function bindEvents(){
   };
   window.__settingsHandlers.notifClose = closeNotifications;
   window.__settingsHandlers.notifScrim = closeNotifications;
+  window.__settingsHandlers.modalClose = function(){
+    const m = $("#modal"); if(m) m.classList.remove("is-show");
+  };
+  window.__settingsHandlers.debugBtn = function(){
+    window.__debugClicks = !window.__debugClicks;
+    state.debugMode = window.__debugClicks; save();
+    const lbl = $("#debugLabel"); if(lbl) lbl.textContent = window.__debugClicks ? "An — Klicks werden geloggt" : "Aus";
+    toast(window.__debugClicks ? "Debug-Modus an" : "Debug-Modus aus");
+  };
+  window.__settingsHandlers.diagBtn = function(){
+    const errors = (window.__errors || []).slice(-5);
+    const errorList = errors.length === 0
+      ? "Keine Fehler aufgezeichnet."
+      : errors.map(function(e, i){ return (i+1) + ". " + e.msg + (e.source ? " (" + e.source.split("/").pop() + ":" + e.line + ")" : ""); }).join("\n\n");
+    const summary = [
+      "Version: v4.3",
+      "Online: " + (navigator.onLine ? "ja" : "nein"),
+      "Standalone: " + (isStandalone() ? "ja" : "nein"),
+      "Service-Worker: " + ("serviceWorker" in navigator ? "verfügbar" : "nicht verfügbar"),
+      "Notifications: " + (("Notification" in window) ? Notification.permission : "n/a"),
+      "Storage used: ~" + Math.round(JSON.stringify(state).length / 1024) + " KB",
+      "Punkte: " + state.points + " | Besuche: " + state.visits + " | Level: " + Math.floor(state.seasonPoints / LEVEL_STEP),
+      "Frosti: " + (state.avatar?.preset || "—") + " · " + (isFrostiSleeping() ? "schläft 💤" : "wach ☀️"),
+      "Letzte Fehler: " + (window.__errors || []).length,
+      "",
+      "—— FEHLERPROTOKOLL ——",
+      errorList,
+    ].join("\n");
+    showInfoModal({ title: "Diagnose", icon: "📋", body: summary });
+  };
 
   // Legacy passthroughs (kept harmless)
   $("#soundBtn")?.addEventListener("click", () => {});
@@ -2385,6 +2509,7 @@ function boot(){
     save();
   }
   // Engagement migrations
+  if(state.debugMode === true) window.__debugClicks = true;
   if(state.lastArticleRead === undefined) state.lastArticleRead = null;
   if(!Array.isArray(state.readArticles)) state.readArticles = [];
   if(state.comebackClaimedMonth === undefined) state.comebackClaimedMonth = null;

@@ -2286,8 +2286,9 @@ body::before{
 }
 
 /* Modal description multi-paragraph */
-.modal__desc p{ margin: 0 0 10px; text-align: left; line-height: 1.55 }
+.modal__desc p{ margin: 0 0 10px; text-align: left; line-height: 1.55; white-space: pre-wrap; word-break: break-word }
 .modal__desc p:last-child{ margin-bottom: 0 }
+.modal__inner{ max-height: 85vh; overflow-y: auto }
 
 /* Onboarding goal grid */
 .goal-grid{
